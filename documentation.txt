@@ -1,0 +1,121 @@
+Documentation
+
+The documentation is brief. If someone wants to contribute some
+documentation, I'd be very happy. The following is available:
+
+   o Installation [#installation]
+   o Usage (how to play) [#usage]
+   o Interesting / relevant links [#links]
+
+Installation
+
+First, a 3D card is strongly recommended. Then, you need the right drivers
+for your card. MacOS users contact their vendor (see links on the download
+page), Win32 users run glsetup [http://www.glsetup.com] , if they haven't
+already done so.
+
+If you don't have a 3D card, don't dispair! I'll try to make a gltron version
+available which is optimized for software rendering. Check back by end of
+April. As for now, try to turn everything off in the Video / Texture Details
+menu.
+
+Installation on Win32 and MacOS is very simple. Extract the archive and start
+the executable! Attention: 3dfx users might have problems with the
+gltron.exe, which uses SDL. Use gltron_glut.exe instead, if you have
+problems.
+
+The following comments are only for people who want to compile the source
+themselves (i.e. all Linux/Unix users).
+
+Linux: Extract the sources somewhere and read the INSTALL file.
+
+Other platforms: There will be a CodeWarrior and a Visual C++ Project
+available when I'm back from my vacations.
+
+Usage
+
+Almost all settings can be changed through the menu system. Usage is
+straightforward:
+
+   o Use the cursor keys (Up/Down) and Space/Enter to navigate the menus.
+   o Press Escape to ascend one menu level / get back to the game.
+   o Use the Left/Right keys to change the volume settings in the Audio menu.
+
+In the game:
+
+'q' exits the game immediately (a panic button, just in case...)
+Press Space to start / restart / pause the game
+
+Change View
+
+'F1': Single player view
+'F2': Two player view
+'F3': Four player view
+
+'F10': Change Camera Mode - there are three different camera modes
+
+Controls (default settings):
+
+Player Turn left Turn right
+1 'a' 's'
+2 'k' 'l'
+3 '5' '6'
+4 'Left' 'Right'
+
+'F12': Takes a screenshot (currently disabled on MacOS)
+
+The linux and win32 versions support command line switches. A description is
+available by typing 'gltron -h'.
+
+Have Fun!
+
+                                                                   top [#top]
+-----------------------------------------------------------------------------
+
+Links
+
+Sites of interest
+
+These sites ran regular announcements of the linux version of glTron from
+version 0.2 on
+
+   o happypenguin.org [http://www.happypenguin.org/] , a site dedicated to
+     linux gaming.
+   o freshmeat [http://www.freshmeat.net/] , all the new software
+
+Websites from people how contributed to glTron:
+
+   o Peter Hajba [mailto:skaven@remedy.fi] composed the soundtrack for
+     glTron. It's called Revenge of Cats and can be found (among other songs)
+     at Skaven's Homepage [http://isis.yok.utu.fi/~skaven/music.html] ,
+
+Other tron/lightcycle games (3d):
+
+   o Tron 3D. [http://homepages.udayton.edu/~haagchra/games/tron.html] A very
+     promising tron clone. Has a lightcycle model, sound effects ripped from
+     the movie, etc. It tries to stay very close to the movie scene.
+     Unfortunately it runs only under windows.
+   o Armagetron [http://pluto.spaceports.com/~zman/armagetron/tron.html] .
+     GPL'd, 3D. I haven't played this one yet.
+   o Newtron. [http://home.t-online.de/home/ahippauf/newtron.htm] Looks like
+     some Amiga fans (yes, that thing still exists) are doing exactly the
+     same as I.
+
+If you are into linux games, try this:
+
+   o Tuxedo T. Penguin: A Quest for Herring
+     [http://www.woodsoup.org/projs/tux_aqfh/] , an impressive 3D game with
+     very cute graphics and huge potential. If you have any talent in level
+     design, music or art, go and help them.
+
+Other stuff
+
+   o If you are interested in OpenGL and want to support gltron, buy a book
+     [amazon.html] (the page contains links to amazon.com / amazon.de that
+     will get me a 15% provision).
+
+     [ Home ] [gltron.html] [ Download ] [download.html] [ Screenshots ]
+[screenshots.html] [ Documentation ] [documentation.html] [ Frequently asked
+   questions ] [faq.html] [ Plans, possible improvements ] [ideas.html] [
+                  Developer information ] [developer.html]
+
