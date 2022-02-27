@@ -1,7 +1,7 @@
 /* system specific functions (basically, an SDL wrapper) */
 
 #include "system.h"
-#include <proto/dos.h>
+#include "dos.h"
 
 static int win_x, win_y;
 static int width, height;
@@ -12,7 +12,7 @@ static callbacks *current = 0;
 void SystemExit() {
 
   stopSound();
-  Delay(50);
+  sleep(0.50);
 
   shutdownSound();
 

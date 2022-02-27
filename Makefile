@@ -2,13 +2,13 @@
 # Makefile for gltron
 
 CC = gcc
-OPT = -O3 -ffast-math -mcpu=604e -funroll-loops -fomit-frame-pointer 
+OPT = -O3 -ffast-math -mtune=generic -funroll-loops -fomit-frame-pointer 
 CFLAGS = -c -Wall -DSOUND -D__USE_INLINE__ -DM_PI=3.1415926 \
 		-ISDK:Local/clib2/include/SDL -ISDK:Local/clib2/include/libpng
-GL_LIBS = -lglu -lglut -lgl
+GL_LIBS = -lGLU -lglut -lGL
 XLIBS = 
-SNDLIBS = -lsdl_mixer -lvorbisfile -lvorbis -logg -lsdl_image -ljpeg -lpng -lz -lsdl
-LIBS =  -lpthread -lauto -lm -lunix
+SNDLIBS = -lSDL_mixer -lvorbisfile -lvorbis -logg -lSDL_image -ljpeg -lpng -lz -lSDL
+LIBS = -lpthread -lm
 
 CFILES = \
 	sgi_texture.c \
@@ -52,4 +52,4 @@ gltron: $(OBJ_SOUND)
 	strip -R.comment gltron
 
 clean: 
-	delete *.o gltron
+	rm -f *.o gltron
