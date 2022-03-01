@@ -12,7 +12,7 @@ static callbacks *current = 0;
 void SystemExit() {
 
   stopSound();
-  sleep(0.50);
+  delay(50);
 
   shutdownSound();
 

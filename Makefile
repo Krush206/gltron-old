@@ -35,6 +35,7 @@ CFILES = \
 	input.c \
 	modelgraphics.c \
 	system.c \
+	delay.c
 
 SOUND_CFILES = \
 	sound.c
