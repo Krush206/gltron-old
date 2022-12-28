@@ -1,7 +1,7 @@
 # Generated automatically from Makefile.in by configure.
 # Makefile for gltron
 
-CC = gcc
+CC = clang
 OPT = -O3 -ffast-math -mtune=generic -funroll-loops -fomit-frame-pointer 
 CFLAGS = -c -Wall -DSOUND -D__USE_INLINE__ -DM_PI=3.1415926 \
 		-ISDK:Local/clib2/include/SDL -ISDK:Local/clib2/include/libpng
