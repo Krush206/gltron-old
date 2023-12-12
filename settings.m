@@ -6,9 +6,10 @@
 #define BUFSIZE 100
 
 @implementation Settings
-- (Settings *) initSettingData: (NSString *) filename
+static Settings *settings;
+
+- (void) initSettingData: (NSString *) filename
 {
-  Settings *settings = [Settings new];
   FILE *f;
   int n, i, count, j;
   char buf[BUFSIZE], c;
@@ -32,7 +33,7 @@
 	[si setName: [[NSString alloc] initWithUTF8String: buf]];
         [si_arr addObject: si];
       }
-      [settings setSettingsInt: si_arr];
+      settings_int = si_arr;
 
       break;
     }
@@ -48,7 +49,7 @@
 	[sf setName: [[NSString alloc] initWithUTF8String: buf]];
         [sf_arr addObject: sf];
       }
-      [settings setSettingsFloat: sf_arr];
+      settings_float = sf_arr;
 
       break;
     }
@@ -59,103 +60,100 @@
   }
   fclose(f);
 
-  [[[settings getSettingsInt] objectAtIndex: 0] setValue: [settings getShowHelpAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 1] setValue: [settings getShowFPSAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 2] setValue: [settings getShowWallAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 3] setValue: [settings getShowGlowAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 4] setValue: [settings getShow2DAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 5] setValue: [settings getShowAlphaAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 6] setValue: [settings getShowFloorTextureAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 7] setValue: [settings getLineSpacingAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 8] setValue: [settings getEraseCrashedAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 9] setValue: [settings getFastFinishAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 10] setValue: [settings getFOVAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 11] setValue: [settings getWidthAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 12] setValue: [settings getHeightAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 13] setValue: [settings getAIStatusAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 14] setValue: [settings getCamTypeAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 15] setValue: [settings getDisplayTypeAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 16] setValue: [settings getPlaySoundAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 17] setValue: [settings getShowModelAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 18] setValue: [settings getAIPlayer1Addr]];
-  [[[settings getSettingsInt] objectAtIndex: 19] setValue: [settings getAIPlayer2Addr]];
-  [[[settings getSettingsInt] objectAtIndex: 20] setValue: [settings getAIPlayer3Addr]];
-  [[[settings getSettingsInt] objectAtIndex: 21] setValue: [settings getAIPlayer4Addr]];
-  [[[settings getSettingsInt] objectAtIndex: 22] setValue: [settings getShowCrashTextureAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 23] setValue: [settings getTurnCycleAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 24] setValue: [settings getMouseWarpAddr]];
-  [[[settings getSettingsInt] objectAtIndex: 25] setValue: [settings getSoundDriverAddr]];
+  [[settings_int objectAtIndex: 0] setValue: &show_help];
+  [[settings_int objectAtIndex: 1] setValue: &show_fps];
+  [[settings_int objectAtIndex: 2] setValue: &show_wall];
+  [[settings_int objectAtIndex: 3] setValue: &show_glow];
+  [[settings_int objectAtIndex: 4] setValue: &show_2d];
+  [[settings_int objectAtIndex: 5] setValue: &show_alpha];
+  [[settings_int objectAtIndex: 6] setValue: &show_floor_texture];
+  [[settings_int objectAtIndex: 7] setValue: &show_line_spacing];
+  [[settings_int objectAtIndex: 8] setValue: &erase_crashed];
+  [[settings_int objectAtIndex: 9] setValue: &fast_finish];
+  [[settings_int objectAtIndex: 10] setValue: &fov];
+  [[settings_int objectAtIndex: 11] setValue: &width];
+  [[settings_int objectAtIndex: 12] setValue: &height];
+  [[settings_int objectAtIndex: 13] setValue: &show_ai_status];
+  [[settings_int objectAtIndex: 14] setValue: &camType];
+  [[settings_int objectAtIndex: 15] setValue: &display_type];
+  [[settings_int objectAtIndex: 16] setValue: &playSound];
+  [[settings_int objectAtIndex: 17] setValue: &show_model];
+  [[settings_int objectAtIndex: 18] setValue: &ai_player1];
+  [[settings_int objectAtIndex: 19] setValue: &ai_player2];
+  [[settings_int objectAtIndex: 20] setValue: &ai_player3];
+  [[settings_int objectAtIndex: 21] setValue: &ai_player4];
+  [[settings_int objectAtIndex: 22] setValue: &show_crash_texture];
+  [[settings_int objectAtIndex: 23] setValue: &turn_cycle];
+  [[settings_int objectAtIndex: 24] setValue: &mouse_warp];
+  [[settings_int objectAtIndex: 25] setValue: &sound_driver];
 
-  [[[settings getSettingsFloat] objectAtIndex: 0] setValue: [settings getSpeedAddr]];
-
-  return settings;
+  [[settings_float objectAtIndex: 0] setValue: &speed];
 }
 
-- (int) getVi: (char *) name settingsInt: (NSArray *) si
+- (int) getVi: (char *) name
 {
   int i;
   
-  for(i = 0; i < [si count]; i++) {
-    if(strstr(name, [[[si objectAtIndex: i] getName] UTF8String]) == name) 
-      return [[si objectAtIndex: i] getValue];
+  for(i = 0; i < [settings_int count]; i++) {
+    if(strstr(name, [[[settings_int objectAtIndex: i] getName] UTF8String]) == name) 
+      return [[settings_int objectAtIndex: i] getValue];
   }
   return 0;
 }
 
-- (Settings *) initMainGameSettings: (NSString *) filename gameObject: (Game *) game
+- (void) initMainGameSettings: (NSString *) filename
 {
-  Settings *settings;
+  Game *game = [Game getGame];
   NSString *fname;
-  NSArray *si = [game getSettingsInt], *sf = [game getSettingsFloat];
   FILE *f;
   char *home, buf[100];
   int i;
 
-  settings = [self initSettingData: filename gameObject: game];
+  [self initSettingData: filename];
 
   /* initialize defaults, then load modifications from file */
 
   [game setPauseFlag: 0];
 
-  [settings setShowHelp: 0];
-  [settings setShowFPS: 1];
-  [settings setShowWall: 1];
-  [settings setShowGlow: 1];
-  [settings setShow2D: 0];
-  [settings setShowAlpha: 1];
-  [settings setShowFloorTexture: 1];
-  [settings setShowCrashTexture: 1];
-  [settings setShowModel: 1];
-  [settings setTurnCycle: 1];
-  [settings setLineSpacing: 1];
-  [settings setEraseCrashed: 0];
-  [settings setFastFinish: 1];
-  [settings setFOV: 105];
-  [settings setSpeed: 4.2];
-  [settings setWidth: 640];
-  [settings setHeight: 480];
-  [settings setShowAIStatus: 1];
-  [settings setCamType: 0];
-  [settings setMouseWarp: 0];
+  show_help = 0;
+  show_fps = 1;
+  show_wall = 1;
+  show_glow = 1;
+  show_2d = 0;
+  show_alpha = 1;
+  show_floor_texture = 1;
+  show_crash_texture = 1;
+  show_model = 1;
+  turn_cycle = 1;
+  line_spacing = 1;
+  erase_crashed = 0;
+  fast_finish = 1;
+  fov = 105;
+  speed = 4.2;
+  width = 640;
+  height = 480;
+  show_ai_status = 1;
+  camType = 0;
+  mouse_warp = 0;
 
-  [settings setDisplayType: 0];
-  [settings setPlaySound: 1];
+  display_type = 0;
+  playSound = 1;
 
-  [settings setAIPlayer1: 0];
-  [settings setAIPlayer2: 1];
-  [settings setAIPlayer3: 1];
-  [settings setAIPlayer4: 1];
+  ai_player1 = 0;
+  ai_player2 = 1;
+  ai_player3 = 1;
+  ai_player4 = 1;
   
-  [settings setSoundDriver: 0];
+  sound_driver = 0;
 
   /* not included in .gltronrc */
 
-  [settings setScreenSaver: 0];
-  [settings setWindowMode: 0];
-  [settings setContent: 0 index: 0];
-  [settings setContent: 1 index: 1];
-  [settings setContent: 2 index: 2];
-  [settings setContent: 3 index: 3];
+  screenSaver = 0;
+  windowMode = 0;
+  content[0] = 0;
+  content[1] = 1;
+  content[2] = 2;
+  content[3] = 3;
 
   /* go for .gltronrc (or whatever is defined in RC_NAME) */
 
@@ -176,35 +174,33 @@
     if(strstr(buf, "iset") == buf) {
       /* linear search through settings */
       /* first: integer */
-      for(i = 0; i < [si count]; i++) {
-        expbuf = [[NSString alloc] initWithFormat: @"iset %@ ", [[si objectAtIndex: i] getName]];
+      for(i = 0; i < [settings_int count]; i++) {
+        expbuf = [[NSString alloc] initWithFormat: @"iset %@ ", [[settings_int objectAtIndex: i] getName]];
 	if(strstr(buf, [expbuf UTF8String]) == buf) {
-          int *si_value = [[si objectAtIndex: i] getValue];
+          int *si_value = [[settings_int objectAtIndex: i] getValue];
 
 	  sscanf(buf + [expbuf length], "%d ", si_value);
-	  printf("assignment: %s\t%d\n", [[[si objectAtIndex: i] getName] UTF8String], *si_value);
+	  printf("assignment: %s\t%d\n", [[[settings_int objectAtIndex: i] getName] UTF8String], *si_value);
 	  break;
 	}
       }
     } else if(strstr(buf, "fset") == buf) {
-      for(i = 0; i < [sf count]; i++) {
-        expbuf = [[NSString alloc] initWithFormat: @"fset %@ ", [[sf objectAtIndex: i] getName]];
+      for(i = 0; i < [settings_float count]; i++) {
+        expbuf = [[NSString alloc] initWithFormat: @"fset %@ ", [[settings_float objectAtIndex: i] getName]];
 	if(strstr(buf, [expbuf UTF8String]) == buf) {
-          float *sf_value = [[sf objectAtIndex: i] getValue];
+          float *sf_value = [[settings_float objectAtIndex: i] getValue];
 
 	  sscanf(buf + [expbuf length], "%f ", sf_value);
-	  printf("assignment: %s\t%.2f\n", [[[sf objectAtIndex: i] getName] UTF8String], *sf_value);
+	  printf("assignment: %s\t%.2f\n", [[[settings_float objectAtIndex: i] getName] UTF8String], *sf_value);
 	  break;
 	}
       }
     }
   }
   fclose(f);
-
-  return settings;
 }
 
-- (void) saveSettings: (NSArray *) si settingsFloat: (NSArray *) sf
+- (void) saveSettings
 {
   FILE *f;
   NSString *fname;
@@ -222,15 +218,15 @@
     perror("for writing");
     return; /* can't write rc */
   }
-  for(i = 0; i < [si count]; i++) {
-    int *si_value = [[si objectAtIndex: i] getValue];
+  for(i = 0; i < [settings_int count]; i++) {
+    int *si_value = [[settings_int objectAtIndex: i] getValue];
 
-    fprintf(f, "iset %s %d\n", [[[si objectAtIndex: i] getName] UTF8String], *si_value);
+    fprintf(f, "iset %s %d\n", [[[settings_int objectAtIndex: i] getName] UTF8String], *si_value);
   }
-  for(i = 0; i < [sf count]; i++) {
-    int *sf_value = [[sf objectAtIndex: i] getValue];
+  for(i = 0; i < [settings_float count]; i++) {
+    int *sf_value = [[settings_float objectAtIndex: i] getValue];
 
-    fprintf(f, "fset %s %.2f\n", [[[sf objectAtIndex: i] getName] UTF8String], *sf_value);
+    fprintf(f, "fset %s %.2f\n", [[[settings_float objectAtIndex: i] getName] UTF8String], *sf_value);
   }
   printf("written settings to %s\n", [fname UTF8String]);
   fclose(f);

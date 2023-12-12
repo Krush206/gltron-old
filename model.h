@@ -28,19 +28,19 @@
 @interface MeshPart
 {
   int nFaces;
-  int *facesizes;
-  float *vertices;
-  float *normals;
+  NSData *facesizes;
+  NSData *vertices;
+  NSData *normals;
 }
 
 - (void) setNFaces: (int) o;
-- (void) setFaceSizes: (int *) o;
-- (void) setVertices: (float *) o;
-- (void) setNormals: (float *) o;
+- (void) setFaceSizes: (NSData *) o;
+- (void) setVertices: (NSData *) o;
+- (void) setNormals: (NSData *) o;
 - (int) getNFaces;
-- (int *) getFaceSizes;
-- (float *) getVertices;
-- (float *) getNormals;
+- (NSData *) getFaceSizes;
+- (NSData *) getVertices;
+- (NSData *) getNormals;
 @end
 
 @interface Mesh
@@ -48,7 +48,7 @@
   int nFaces;
   int nMaterials;
   Material *materials;
-  MeshPart *meshparts;
+  NSArray *meshparts;
   float bbox[3];
 }
 
@@ -63,16 +63,5 @@
 - (MeshPart *) getMeshPart;
 - (float *) getBBox;
 @end
-
-extern char* getFullPath(char* filename);
-extern int loadMaterials(char* filename, Material **materials);
-extern Mesh* loadModel(const char *filename, float size, int flags);
-extern void unloadModel(Mesh *mesh);
-extern void drawModel(Mesh *mesh, int mode, int flag);
-extern void drawExplosion(Mesh *mesh, float radius, int mode, int flag);
-extern void setMaterialAlphas(Mesh *mesh, float alpha);
-extern void setMaterialAmbient(Mesh *mesh, int material, float* color);
-extern void setMaterialDiffuse(Mesh *mesh, int material, float* color);
-extern void setMaterialSpecular(Mesh *mesh, int material, float* color);
 
 #endif

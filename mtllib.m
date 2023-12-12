@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int loadMaterials(char *filename, NSArray **materials) {
+@implementation MTLlib
+- (int) loadMaterial: (NSString *) filename materials: (NSArray **) materials {
   NSMutableArray *m = [NSMutableArray new];
   FILE *f;
   char buf[120];
@@ -67,13 +68,4 @@ int loadMaterials(char *filename, NSArray **materials) {
   *materials = m;
   return iMaterial + 1;
 }
-		       
-	
-
-    
-	
-	
-      
-			   
-  
-
+@end

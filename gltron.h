@@ -120,10 +120,6 @@ typedef struct callbacks {
   void (*initGL)(void);
 } callbacks;
 
-@interface ReadLine: NSObject
-- (NSMutableString *) readLine: (const char **) s;
-@end
-
 @interface Line: NSObject
 {
   float sx, sy, ex, ey;
@@ -155,6 +151,8 @@ typedef struct callbacks {
 - (float *) getColorAlpha;
 - (float *) getColorTrail;
 - (float *) getColorModel;
++ (void) setMesh: (Mesh *) o;
++ (Mesh *) getMesh;
 @end
 
 @interface Data: NSObject
@@ -468,12 +466,13 @@ typedef struct callbacks {
 - (int *) getSoundDriverAddr;
 - (NSArray *) getSettingsInt;
 - (NSArray *) getSettingsFloat;
++ (void) setSettings: (Settings *) o;
++ (Settings *) getSettings;
 @end
 
 @interface Game: NSObject
 {
   GDisplay *screen;
-  Settings *settings;
   Player *player[MAX_PLAYERS];
   int players;
   int winner;
@@ -487,47 +486,43 @@ typedef struct callbacks {
   fonttex *ftx;
   int fontID;
 
-  Menu** pMenuList;
-  Menu* pRootMenu;
-  Menu* pCurrent;
+  Menu **pMenuList;
+  Menu *pRootMenu;
+  Menu *pCurrent;
 
-  unsigned char* colmap;
-  int colwidth;
-
-  int dirsX[];
-  int dirsY[];
-  
   int lasttime; 
-  double dt;
 
   int polycount;
-
-  float colors_alpha[][4];
-  float colors_trail[][4];
-  float colors_model[][4];
-  int vp_max[];
-  float vp_x[3][4];
-  float vp_y[3][4];
-  float vp_w[3][4];
-  float vp_h[3][4];
-
-  char *help[];
 }
 
 - (void) setGDisplay: (GDisplay *) o;
-- (void) setSettings: (Settings *) o;
 - (void) setPlayer: (Player *) o index: (int) i;
 - (void) setPlayers: (int) o;
 - (void) setWinner: (int) o;
 - (void) setPauseFlag: (int) o;
 - (void) setRunning: (int) o;
 - (GDisplay *) getGDisplay;
-- (Settings *) getSettings;
 - (Player **) getPlayer;
 - (int) getPlayers;
 - (int) getWinner;
 - (int) getPauseFlag;
 - (int) getRunning;
++ (void) setGame: (Game *) o;
++ (void) setSound: (Sound *);
++ (Game *) getGame;
++ (Sound *) getSound;
+@end
+
+@interface Engine: NSObject
+{
+  NSData *colmap;
+  int colwidth;
+}
+
+- (void) setColmap: (unsigned char *);
+- (unsigned char *) getColmap;
++ (void) setEngine: (Engine *) o;
++ (Engine *) getEngine;
 @end
 
 #define PAUSE_GAME_FINISHED 1
@@ -538,150 +533,4 @@ typedef struct callbacks {
 #define HELP_FONT GLUT_BITMAP_9_BY_15
 #define HELP_DY 20
 
-/* function prototypes */
-
-/* TODO: sort these */
-/* engine.c */
-
-extern void setCol(int x, int y);
-extern void clearCol(int x, int y);
-extern int getCol(int x, int y);
-extern void turn(Data* data, int direction);
-
-extern void idleGame();
-
-extern void initGame();
-extern void initGameStructures();
-
-extern void initGameScreen();
-extern void initDisplay(GDisplay *d, int type, int p, int onScreen);
-extern void changeDisplay();
-extern void defaultDisplay(int n);
-extern void cycleDisplay(int p);
-
-extern void doTrail(line *t, void(*mark)(int, int));
-extern void fixTrails();
-extern void clearTrails(Data *data);
-
-/* gltron.c */
-
-extern void mouseWarp();
-
-extern void initData();
-extern void drawGame();
-extern void displayGame();
-extern void initGLGame();
-
-extern void shutdownDisplay(GDisplay *d);
-extern void setupDisplay(GDisplay *d);
-
-extern int colldetect(float sx, float sy, float ex, float ey, int dir, int *x, int *y);
-
-extern int allAI();
-extern int getElapsedTime(void);
-extern void setGameIdleFunc(void);
-extern void initGlobals(void);
-extern int screenSaverCheck(int t);
-extern void scaleDownModel(float height, int i);
-extern void setMainIdleFunc(void);
-
-/* various initializations -> init.c */
-
-extern void initFonts();
-
-/* texture initializing -> texture.c */
-
-extern void initTexture();
-extern void deleteTextures();
-
-/* help -> character.c */
-
-/* extern void drawLines(int, int, char**, int, int); */
-
-/* ai -> computer.c */
-
-extern int freeway(Data *data, int dir);
-extern void getDistPoint(Data *data, int d, int *x, int *y);
-extern void doComputer(Player *me, Data *him);
-
-/* keyboard -> input.c */
-
-extern void keyGame(unsigned char k, int x, int y);
-extern void specialGame(int k, int x, int y);
-extern void parse_args(int argc, char *argv[]);
-
-/* settings -> settings.c */
-
-extern void initMainGameSettings();
-extern void saveSettings();
-
-/* menu -> menu.c */
-
-extern void menuAction(Menu* activated);
-extern Menu** loadMenuFile(char* filename);
-extern void drawMenu(GDisplay *d);
-extern void showMenu();
-extern void removeMenu();
-extern void initMenuCaption(Menu *m);
-extern int* getVi(char *szName);
-
-/* file handling -> file.c */
-
-extern char* getFullPath(char* filename);
-
-/* callback stuff -> switchCallbacks.c */
-
-extern void chooseCallback(char*);
-extern void restoreCallbacks();
-extern void switchCallbacks(callbacks*);
-extern void updateCallbacks();
-
-/* probably common graphics stuff -> graphics.c */
-
-extern void checkGLError(char *where);
-extern void rasonly(GDisplay *d);
-extern void drawFPS(GDisplay *d);
-extern void drawText(int x, int y, int size, char *text);
-extern int hsv2rgb(float, float, float, float*, float*, float*);
-extern void colorDisc();
-
-/* gltron game graphics -> gamegraphics.c */
-extern void drawDebugTex(GDisplay *d);
-extern void drawScore(Player *p, GDisplay *d);
-extern void drawFloor(GDisplay *d);
-extern void drawTraces(Player *, GDisplay *d, int instance);
-extern void drawPlayers(Player *);
-extern void drawWalls(GDisplay *d);
-extern void drawCam(Player *p, GDisplay *d);
-extern void drawAI(GDisplay *d);
-extern void drawPause(GDisplay *d);
-extern void drawHelp(GDisplay *d);
-
-/* font stuff ->fonts.c */
-extern void initFonts();
-extern void deleteFonts();
-
-extern void resetScores();
-
-
-extern void draw( void );
-
-
-extern void chaseCamMove();
-extern void timediff();
-extern void camMove();
-
-extern void movePlayers();
-
-extern callbacks gameCallbacks;
-extern callbacks guiCallbacks;
-/* extern callbacks chooseModelCallbacks; */
-extern callbacks pauseCallbacks;
-
 #endif
-
-
-
-
-
-
