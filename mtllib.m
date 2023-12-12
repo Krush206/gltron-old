@@ -1,12 +1,7 @@
 #define MAX_MATERIALS 100
 
-#include "model.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 @implementation MTLlib
-- (int) loadMaterial: (NSString *) filename materials: (NSArray **) materials {
+- (int) loadMaterials: (NSString *) filename materials: (NSArray **) materials {
   NSMutableArray *m = [NSMutableArray new];
   FILE *f;
   char buf[120];

@@ -1,7 +1,4 @@
 #import "gltron.h"
-#import <stdio.h>
-#import <stdlib.h>
-#import <string.h>
 
 #define BUFSIZE 100
 

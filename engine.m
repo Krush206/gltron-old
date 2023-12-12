@@ -1,4 +1,4 @@
-#include "gltron.h"
+#import "gltron.h"
 
 @implementation Engine
 static Engine *engine;
@@ -121,6 +121,7 @@ static double dt;
   /*   create camera */
 
   Game *game = [Game getGame];
+  Model *model = [Model new];
   GDisplay *d;
   int i, j;
   /* int onScreen; */
@@ -160,7 +161,7 @@ static double dt;
     // path = getFullPath("tron-med.obj");
     if(path != nil)
       // model size == CYCLE_HEIGHT
-      [[p[i] getModel] setMesh: loadModel(path, CYCLE_HEIGHT, 1)];
+      [[p[i] getModel] setMesh: [model loadModel: path size: CYCLE_HEIGHT flags: 1];
     else {
       printf("fatal: could not load model - exiting...\n");
       exit(1);
