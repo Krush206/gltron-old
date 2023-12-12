@@ -486,7 +486,7 @@ typedef struct callbacks {
   fonttex *ftx;
   int fontID;
 
-  Menu **pMenuList;
+  NSArray **pMenuList;
   Menu *pRootMenu;
   Menu *pCurrent;
 
@@ -495,13 +495,13 @@ typedef struct callbacks {
   int polycount;
 }
 
-- (void) setGDisplay: (GDisplay *) o;
+- (void) setScreen: (GDisplay *) o;
 - (void) setPlayer: (Player *) o index: (int) i;
 - (void) setPlayers: (int) o;
 - (void) setWinner: (int) o;
 - (void) setPauseFlag: (int) o;
 - (void) setRunning: (int) o;
-- (GDisplay *) getGDisplay;
+- (GDisplay *) getScreen;
 - (Player **) getPlayer;
 - (int) getPlayers;
 - (int) getWinner;

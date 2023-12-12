@@ -106,7 +106,7 @@ static double dt;
 
   for(i = 0; i < [game getPlayers]; i++)
     [[[game getPlayer][i] getDisplay] setOnScreen: 0];
-  for(i = 0; i < vp_max[game->settings->display_type]; i++)
+  for(i = 0; i < vp_max[[settings getDisplayType]]; i++)
        initDisplay([[game getPlayer][[settings getContent][i]] getDisplay], 
 		   [settings getDisplayType], i, 1);
 }
@@ -120,6 +120,7 @@ static double dt;
   /*   create data */
   /*   create camera */
 
+  Settings *settings = [Settings getSettings];
   Game *game = [Game getGame];
   Model *model = [Model new];
   GDisplay *d;
@@ -178,7 +179,7 @@ static double dt;
     setMaterialDiffuse(p->model->mesh, 0, p->model->color_model);
 
     ai = [p[i] getAI];
-    [ai setActive: (i == 0 && [[Settings getSettings] getScreensaver] == 0) ? -1 : 1];
+    [ai setActive: (i == 0 && [settings getScreensaver] == 0) ? -1 : 1];
     [ai setTDiff: 0];
     [ai setMoves: 0];
     [ai setDanger: 0];
@@ -333,7 +334,7 @@ static double dt;
   soundIdle();
 #endif
 
-  if([[game getSettings] getFastFinish] == 1) {
+  if([[Settings getSettings] getFastFinish] == 1) {
     loop = FAST_FINISH;
     for(i = 0; i < [game getPlayers]; i++)
       if([[[game getPlayer][i] getAI] getActive] != 1 &&
@@ -364,23 +365,23 @@ static double dt;
 }
 
 - (void) defaultDisplay: (int) n {
-  Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
  
-  [[game getSettings] setDisplayType: n];
-  [[game getSettings] getContent][0] = 0;
-  [[game getSettings] getContent][1] = 1;
-  [[game getSettings] getContent][2] = 2;
-  [[game getSettings] getContent][3] = 3;
+  [settings setDisplayType: n];
+  [settings getContent][0] = 0;
+  [settings getContent][1] = 1;
+  [settings getContent][2] = 2;
+  [settings getContent][3] = 3;
   changeDisplay();
 }
 
 - (void) initGameScreen {
   GDisplay *d;
-  Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
   
-  d = [[game getSettings] getScreen];
-  [d setH: [[game getSettings] getHeight]];
-  [d setW: [[game getSettings] getWidth]];
+  d = [settings getScreen];
+  [d setH: [settings getHeight]];
+  [d setW: [settings getWidth]];
   [d setVPX: 0];
   [d setVPY: 0];
   [d setVPW: [d getW]];
@@ -390,11 +391,12 @@ static double dt;
 - (void) cycleDisplay: (int) p {
   int q;
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
 
-  q = ([[game getSettings] getContent][p] + 1) % [game getPlayers];
-  while(q != [[game getSettings] getContent][p]) {
+  q = ([settings getContent][p] + 1) % [game getPlayers];
+  while(q != [settings getContent][p]) {
     if([[[game getPlayer][q] getDisplay] getOnScreen] == 0)
-      [[game getSettings] getContent][p] = q;
+      [settings getContent][p] = q;
     else q = (q + 1) % [game getPlayers];
   }
   changeDisplay();
@@ -416,6 +418,7 @@ static double dt;
   int winner;
   Data *data;
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
 
   /* do movement and collision */
   for(i = 0; i < [game getPlayers]; i++) {
@@ -437,7 +440,7 @@ static double dt;
 	  newx = x;
 	  newy = y;
 	  /* update scores; */
-	  if([[game getSettings] getScreenSaver] != 1)
+	  if([settings getScreenSaver] != 1)
 	  for(j = 0; j < [game getPlayers]; j++) {
 	    if(j != i && [[[game getPlayer][j] getData] getSpeed] > 0)
 	      [[[game getPlayer][j] getData] getScore]++;
@@ -459,7 +462,7 @@ static double dt;
 	[data setPosX: newx];
 	[data setPosY: newy];
 
-	if(col && [[game getSettings] getEraseCrashed] == 1) {
+	if(col && [settings getEraseCrashed] == 1) {
 	  clearTrails(data);
 	  [self fixTrails]; /* clearTrails does too much... */
 	}
@@ -480,7 +483,7 @@ static double dt;
 	  [game setPauseFlag: PAUSE_GAME_FINISHED];
 	}
       }
-      if([[game getSettings] getEraseCrashed] == 1 && [data getTrailHeight] > 0)
+      if([settings getEraseCrashed] == 1 && [data getTrailHeight] > 0)
 	[data setTrailHeight: [data getTrailHeight] - (float)(dt * TRAIL_HEIGHT) / 1000];
     }
   }

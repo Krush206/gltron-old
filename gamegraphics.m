@@ -32,8 +32,9 @@
 - (void) drawFloor: (GDisplay *) d {
   int j, k, l, t;
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
 
-  if([[game getSettings] getShowFloorTexture]) {
+  if([settings getShowFloorTexture]) {
     glDepthMask(GL_TRUE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, [[game getScreen] getTexFloor]);
@@ -62,7 +63,7 @@
     /* lines as floor... */
     glColor3f(0.0, 0.0, 1.0);
     glBegin(GL_LINES);
-    for(j = 0; j <= GSIZE; j += [[game getSettings] getLineSpacing]) {
+    for(j = 0; j <= GSIZE; j += [settings getLineSpacing]) {
       glVertex3i(0, j, 0);
       glVertex3i(GSIZE, j, 0);
       glVertex3i(j, 0, 0);
@@ -77,6 +78,7 @@
   Line *line;
   float height;
   Data *data;
+  Settings *settings = [Settings getSettings];
 
   data = [p getData];
   height = [data getTrailHeight];
@@ -100,7 +102,7 @@
     polycount += 2;
     glEnd();
 
-    if([[game getSettings] getCamType] == 1) {
+    if([settings getCamType] == 1) {
       //       glLineWidth(3);
       // glBegin(GL_LINES);
       glBegin(GL_QUADS);
@@ -121,6 +123,7 @@
 - (void) drawCrash: (float) radius {
 #define CRASH_W 20
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
 
   glColor4f(1.0, 1.0, 1.0, (EXP_RADIUS_MAX - radius) / EXP_RADIUS_MAX);
   /* printf("exp_r: %.2f\n", (EXP_RADIUS_MAX - radius) / EXP_RADIUS_MAX); */
@@ -138,7 +141,7 @@
   glVertex3f(- CRASH_W, 0.0, CRASH_W);
   glEnd();
   glDisable(GL_TEXTURE_2D);
-  if([[game getSettings] getShowAlpha] == 0) glDisable(GL_BLEND);
+  if([settings getShowAlpha] == 0) glDisable(GL_BLEND);
 }
 
 - (void) drawCycle (Player *) p {
@@ -147,6 +150,7 @@
   int last_dir;
   float dirangle;
   Mesh *cycle;
+  Settings *settings = [Settings getSettings];
 
 #define turn_length 500
 
@@ -155,7 +159,7 @@
   glPushMatrix();
   glTranslatef([[p getData] getPosX], [[p getData] getPosY], .0);
 
-  if([[game getSettings] getTurnCycle]) {
+  if([settings getTurnCycle]) {
     time = abs([[p getData] getTurnTime] - getElapsedTime());
     if(time < turn_length) {
       last_dir = [[p getData] getLastDir];
@@ -171,12 +175,12 @@
 
   glRotatef(dirangle, 0, 0.0, 1.0);
 
-  if([[game getSettings] getShowCrashTexture])
+  if([settings getShowCrashTexture])
     if([[p getData] getExpRadius] > 0 && [[p getData] getExpRadius] < EXP_RADIUS_MAX)
       drawCrash([[p getData] getExpRadius]);
 
 #define neigung 25
-  if([[game getSettings] getTurnCycle]) {
+  if([settings getTurnCycle]) {
     if(time < turn_length) {
       float axis = 1.0;
       if([[p getData] getDir] < [[p getData] getLastDir] && [[p getData] getLastDir] != 3)
@@ -209,7 +213,7 @@
     drawExplosion(cycle, [[p getData] getExpRadius], MODEL_USE_MATERIAL, 0);
   }
 
-  if([[game getSettings] getShowAlpha] == 0) glDisable(GL_BLEND);
+  if([settings getShowAlpha] == 0) glDisable(GL_BLEND);
 
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
@@ -225,6 +229,7 @@
   float s;
   float d;
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
 
   vsub([[eye getCamera] getTarget], [[eye getCamera] getCam], v1);
   normalize(v1);
@@ -235,7 +240,7 @@
   normalize(v2);
   s = scalarprod(v1, v2);
   /* maybe that's not exactly correct, but I didn't notice anything */
-  d = cos(([[game getSettings] getFOV] / 2) * 2 * M_PI / 360.0);
+  d = cos([settings getFOV] / 2) * 2 * M_PI / 360.0);
   /*
   printf("v1: %.2f %.2f %.2f\nv2: %.2f %.2f %.2f\ns: %.2f d: %.2f\n\n",
 	 v1[0], v1[1], v1[2], v2[0], v2[1], v2[2],
@@ -252,6 +257,7 @@
   float l = 5.0;
   float height;
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
 
   glShadeModel(GL_SMOOTH);
   glEnable(GL_BLEND);
@@ -277,17 +283,18 @@
       glPopMatrix();
     }
     if(playerVisible(p, &([game getPlayer][i]))) {
-      if([[game getSettings] getShowModel])
+      if([settings getShowModel])
 	drawCycle(&([game getPlayer][i]));
     }
   }
-  if([[game getSettings] getShowAlpha] != 1) glDisable(GL_BLEND);
+  if([settings getShowAlpha] != 1) glDisable(GL_BLEND);
   glShadeModel(GL_FLAT);
 }
 
 - (void) drawGlow: (Player *) p display: (GDisplay *) d dimension: (float) dim {
   float mat[4*4];
   Game *game = [Game getGame];
+  Settings *settings = [Settings getSettings];
   
   glPushMatrix();
   glTranslatef([[p getData] getPosX],
@@ -344,7 +351,7 @@
 
 
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if([[game getSettings] getShowAlpha] != 1) glDisable(GL_BLEND);
+  if([settings getShowAlpha] != 1) glDisable(GL_BLEND);
   glShadeModel(GL_FLAT);
   glPopMatrix();  
 }
@@ -411,13 +418,14 @@ void drawHelp(GDisplay *d) {
 
 - (void) drawCam: (Player *) p display: (GDisplay *) d {
   int i;
+  Settings *settings = [Settings getSettings];
 
   if ([d getFog] == 1) glEnable(GL_FOG);
 
   glColor3f(0.0, 1.0, 0.0);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective([[game getSettings] getFOV], [d getVPW] / [d getVPH], 3.0, GSIZE);
+  gluPerspective([settings getFOV], [d getVPW] / [d getVPH], 3.0, GSIZE);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -428,7 +436,7 @@ void drawHelp(GDisplay *d) {
 	    0, 0, 1);
 
   drawFloor(d);
-  if([[game getSettings] getShowWall] == 1)
+  if([settings getShowWall] == 1)
     drawWalls(d);
 
   for(i = 0; i < [game getPlayers]; i++)
@@ -437,7 +445,7 @@ void drawHelp(GDisplay *d) {
   drawPlayers(p);
 
   /* draw the glow around the other players: */
-  if([[game getSettings] getShowGlow] == 1)
+  if([settings getShowGlow] == 1)
     for(i = 0; i < [game getPlayers]; i++)
       if ((p != &([game getPlayer][i])) && ([[[game getPlayer][i] getData] getSpeed] > 0))
 	drawGlow(&([game getPlayer][i]), d, TRAIL_HEIGHT * 4);

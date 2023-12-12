@@ -7,7 +7,7 @@
 /* warning: changing this will break drawModel() */
 #define MODEL_FACESIZE 4
 
-@interface Materials
+@interface Materials: NSObject
 {
   float ambient[4];
   float diffuse[4];
@@ -25,7 +25,7 @@
 - (float *) getSpecular;
 @end
 
-@interface MeshPart
+@interface MeshPart: NSObject
 {
   int nFaces;
   NSData *facesizes;
@@ -43,7 +43,7 @@
 - (NSData *) getNormals;
 @end
 
-@interface Mesh
+@interface Mesh: NSObject
 {
   int nFaces;
   int nMaterials;
