@@ -49,17 +49,5 @@ void restoreCallbacks() {
 void chooseCallback(char *name) {
   /* maintain a table of names of callbacks */
   /* lets hardcode the names for all known modes in here */
-
-/* TODO(3): incorporate model stuff */
-  /*
-  if(strcmp(name, "chooseModel") ==  0) {
-    fprintf(stderr, "change callbacks to chooseModel\n");
-    switchCallbacks(&chooseModelCallbacks);
-  }
-  */
-  if(strcmp(name, "gui") == 0) {
-    /* fprintf(stderr, "change callbacks to gui\n"); */
-    switchCallbacks(&guiCallbacks);
-  }
 }
 

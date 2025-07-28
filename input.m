@@ -8,7 +8,7 @@ void keyGame(unsigned char k, int x, int y)
 {
   switch (k) {
   case 'q': exit(0); break;
-  case 27: switchCallbacks(&pauseCallbacks); [NSApp run]; break;
+  case 27: switchCallbacks(&pauseCallbacks); [NSApp loop]; break;
     /* steering player 0 */
   case 'a': case 'A': turn(game->player[0].data, 3); break;
   case 's': case 'S': turn(game->player[0].data, 1); break;

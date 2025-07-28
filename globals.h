@@ -12,9 +12,6 @@ unsigned int global_texGui;
 fonttex *ftx = NULL;
 int fontID = 6;
 
-Menu** pMenuList;
-Menu* pRootMenu;
-
 float camAngle = 0;
 
 unsigned char* colmap = NULL;

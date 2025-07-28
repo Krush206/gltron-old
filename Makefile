@@ -39,7 +39,6 @@ GLTRON_HOME = /usr/share/games/gltron
 CFILES = start.m \
 	sgi_texture.m \
 	switchCallbacks.m \
-	gui.m \
 	pause.m \
 	computer.m \
 	engine.m \

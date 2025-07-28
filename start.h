@@ -11,12 +11,16 @@ extern struct Game *game;
 - (void) textDidChange: (NSNotification *) notification;
 @end
 
-@interface Driver: NSObject
+@interface SoundMenu: NSObject
+- (void) show;
+- (void) back;
 - (void) apply;
+- (void) list;
 @end
 
-@interface List: NSWindow <NSWindowDelegate>
+@interface GameMenu: NSObject
 - (void) show;
+- (void) showFPS;
 @end
 
 @interface Start: NSWindow <NSWindowDelegate>
@@ -24,6 +28,8 @@ extern struct Game *game;
 @end
 
 @interface App: NSApplication <NSApplicationDelegate>
+- (void) playGame;
+- (void) loop;
 - (void) run;
 @end
 #endif

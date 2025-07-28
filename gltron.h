@@ -268,10 +268,6 @@ extern fonttex *ftx;
 extern int fontID;
 #define MAX_FONTS 17
 
-extern Menu** pMenuList;
-extern Menu* pRootMenu;
-extern Menu* pCurrent;
-
 extern unsigned char* colmap;
 extern int colwidth;
 
@@ -374,16 +370,6 @@ extern void parse_args(int argc, char *argv[]);
 
 extern void initMainGameSettings();
 extern void saveSettings();
-
-/* menu -> menu.c */
-
-extern void menuAction(Menu* activated);
-extern Menu** loadMenuFile(char* filename);
-extern void drawMenu(gDisplay *d);
-extern void showMenu();
-extern void removeMenu();
-extern void initMenuCaption(Menu *m);
-extern int* getVi(char *szName);
 
 /* file handling -> file.c */
 

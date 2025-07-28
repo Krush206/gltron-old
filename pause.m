@@ -1,6 +1,8 @@
 #include "gltron.h"
 
 /* very brief - just the pause mode */
+@class NSApplication;
+extern NSApplication *NSApp;
 
 void idlePause() {
 #ifdef SOUND
@@ -24,6 +26,7 @@ void displayPause() {
 void keyboardPause(unsigned char key, int x, int y) {
   switch(key) {
   case 27:
+    [NSApp loop];
     break;
   case ' ':
     if(game->pauseflag & PAUSE_GAME_FINISHED)
