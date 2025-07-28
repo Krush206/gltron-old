@@ -161,46 +161,14 @@ void setupDisplay(gDisplay *d) {
 }
 
 @class App;
+struct Arguments args;
 
 int main( int argc, char *argv[] ) {
-  char *path;
-
 #ifdef __FreeBSD__
   fpsetmask(0);
 #endif
 
-  glutInit(&argc, argv);
-
-  path = getFullPath("settings.txt");
-  if(path != 0)
-    initMainGameSettings(path); /* reads defaults from ~/.gltronrc */
-  else {
-    printf("fatal: could not settings.txt, exiting...\n");
-    exit(1);
-  }
-
-  parse_args(argc, argv);
-
-  /* sound */
-
-#ifdef SOUND
-  printf("initializing sound\n");
-  initSound();
-  path = getFullPath("gltron.it");
-  if(path == 0 || loadSound(path)) 
-    printf("error trying to load sound\n");
-  else {
-    if(game->settings->playSound) {
-      playSound();
-      free(path);
-    }
-  }
-#endif
-
-  initGameStructures();
-  resetScores();
-
-  initData();
+  glutInit(args.argc = &argc, args.argv = argv);
 
   [[App sharedApplication] run];
   setupDisplay(game->screen);

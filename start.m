@@ -61,9 +61,15 @@ static struct Speed {
 
 - (void) apply
 {
+  game->settings->sound_driver = [drvOption unsignedIntValue];
+  saveSettings();
+  [NSThread exit];
+}
+
+- (void) cancel
+{
   id i;
 
-  md_device = game->settings->sound_driver = [drvOption unsignedIntValue];
   [superview replaceSubview: view[1] with: view[0]];
   for(i in [view[0] subviews])
     [start makeFirstResponder: i];
@@ -125,15 +131,20 @@ static struct Speed {
 @end
 
 @implementation Start
-- (void) windowShouldClose: (NSWindow *) sender
+- (BOOL) windowShouldClose: (NSWindow *) sender
 {
   [NSThread exit];
+
+  return YES;
 }
 @end
 
 @implementation App
 - (void) playGame
 {
+  resetScores();
+  initData();
+  saveSettings();
   [start setIsVisible: NO];
   [self stop: self];
 }
@@ -188,9 +199,36 @@ static struct Speed {
   Field *field;
   NSText *text;
   NSRect rect;
+  NSImage *img;
+  NSImageView *imgView;
   SoundMenu *soundMenu;
   GameMenu *gameMenu;
+  char *path;
 
+  /* Load settings. */
+  path = getFullPath("settings.txt");
+  if(path != 0)
+    initMainGameSettings(path); /* reads defaults from ~/.gltronrc */
+  else {
+    printf("fatal: could not settings.txt, exiting...\n");
+    exit(1);
+  }
+  /* Parse arguments. */
+  parse_args(*args.argc, args.argv);
+  /* Load sound. */
+#ifdef SOUND
+  printf("initializing sound\n");
+  initSound();
+  path = getFullPath("gltron.it");
+  if(path == 0 || loadSound(path)) 
+    printf("error trying to load sound\n");
+  else {
+    if(game->settings->playSound) {
+      playSound();
+      free(path);
+    }
+  }
+#endif
   /* Window setup. */
   superview = [start = [[Start alloc] initWithContentRect: rect = NSMakeRect(0, 0, 400, 300)
                            styleMask: NSWindowStyleMaskTitled |
@@ -208,6 +246,10 @@ static struct Speed {
   [dock display];
   /* Main menu. */
   view[0] = [[NSView alloc] initWithFrame: rect];
+  img = [[NSImage alloc] initWithContentsOfFile: @"./gltron.tiff"];
+  imgView = [[NSImageView alloc] initWithFrame: NSMakeRect(NSMaxX(rect) - 325, -300, [img size].height * 4, [img size].width * 4)];
+  [imgView setImage: img];
+  [view[0] addSubview: imgView];
   button = [[NSButton alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) + 10, NSMinY(rect) + 100, 50, 25)];
   [button setTitle: @"Sound"];
   [button setTarget: soundMenu = [SoundMenu new]];
@@ -225,15 +267,20 @@ static struct Speed {
   [view[0] addSubview: button];
   /* Sound driver selection menu. */
   view[1] = [[NSView alloc] initWithFrame: rect];
-  button = [[NSButton alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) + 10, NSMinY(rect) + 50, 50, 25)];
+  button = [[NSButton alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) + 10, NSMinY(rect) + 70, 50, 25)];
   [button setTitle: @"List"];
   [button setTarget: soundMenu];
   [button setAction: @selector(list)];
   [view[1] addSubview: button];
-  button = [[NSButton alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) - 60, NSMinY(rect) + 50, 50, 25)];
+  button = [[NSButton alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) - 60, NSMinY(rect) + 70, 50, 25)];
   [button setTitle: @"Apply"];
   [button setTarget: soundMenu];
   [button setAction: @selector(apply)];
+  [view[1] addSubview: button];
+  button = [[NSButton alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) - 35, NSMinY(rect) + 20, 70, 25)];
+  [button setTitle: @"Cancel"];
+  [button setTarget: soundMenu];
+  [button setAction: @selector(cancel)];
   [view[1] addSubview: button];
   field = [[Field alloc] initWithFrame: NSMakeRect((NSMaxX(rect) / 2) - 80, NSMinY(rect) + 150, 155, 25)];
   [field setDelegate: field];
@@ -323,8 +370,9 @@ static struct Speed {
   [button setTarget: gameMenu];
   [button setAction: @selector(back)];
   [view[3] addSubview: button];
+  /* Setup structures. */
+  initGameStructures();
   /* Show main menu. */
-  game->settings->line_spacing = 0;
   [superview addSubview: view[0]];
   [self setDelegate: self];
   [self finishLaunching];

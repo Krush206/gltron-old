@@ -424,6 +424,11 @@ extern callbacks guiCallbacks;
 /* extern callbacks chooseModelCallbacks; */
 extern callbacks pauseCallbacks;
 
+struct Arguments {
+  int *argc;
+  char **argv;
+};
+
 #endif
 
 

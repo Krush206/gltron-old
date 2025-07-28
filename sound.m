@@ -16,6 +16,7 @@ int initSound() {
   MikMod_RegisterAllDrivers();
 #endif
   drivers = MikMod_InfoDriver();
+  md_device = game->settings->sound_driver;
 
   MikMod_RegisterAllLoaders();
 

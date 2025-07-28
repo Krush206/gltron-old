@@ -5,6 +5,7 @@
 extern const char *drivers;
 extern unsigned int md_device;
 extern struct Game *game;
+extern struct Arguments args;
 
 @interface Field: NSTextField <NSTextFieldDelegate>
 - (BOOL) textShouldBeginEditing: (NSText *) textObject;
@@ -14,6 +15,7 @@ extern struct Game *game;
 @interface SoundMenu: NSObject
 - (void) show;
 - (void) back;
+- (void) cancel;
 - (void) apply;
 - (void) list;
 @end
@@ -21,10 +23,13 @@ extern struct Game *game;
 @interface GameMenu: NSObject
 - (void) show;
 - (void) showFPS;
+- (void) eraseCrashed;
+- (void) fastFinish;
+- (void) back;
 @end
 
 @interface Start: NSWindow <NSWindowDelegate>
-- (void) windowShouldClose: (NSWindow *) sender;
+- (BOOL) windowShouldClose: (NSWindow *) sender;
 @end
 
 @interface App: NSApplication <NSApplicationDelegate>
