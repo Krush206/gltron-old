@@ -33,7 +33,6 @@ extern struct Arguments args;
 @end
 
 @interface App: NSApplication <NSApplicationDelegate>
-- (void) stop: (id) sender;
 - (void) playGame;
 - (void) loop;
 - (void) applicationDidFinishLaunching: (NSNotification *) notification;

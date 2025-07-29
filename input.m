@@ -1,13 +1,10 @@
 #define KEYBOARD
 #include "gltron.h"
 
-@class NSApplication;
-extern NSApplication *NSApp;
-
 void keyGame(unsigned char k, int x, int y)
 {
   switch (k) {
-  case 27: [NSApp stop: NSApp]; break;
+  case 27: glutLeaveMainLoop(); break;
     /* steering player 0 */
   case 'a': case 'A': turn(game->player[0].data, 3); break;
   case 's': case 'S': turn(game->player[0].data, 1); break;

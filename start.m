@@ -130,13 +130,16 @@ static struct Speed {
 }
 @end
 
-@implementation App
-- (void) stop: (id) sender
+@implementation Start
+- (BOOL) windowShouldClose: (NSWindow *) sender
 {
-  glutLeaveMainLoop();
-  [start setIsVisible: YES];
-}
+  [NSThread exit];
 
+  return YES;
+}
+@end
+
+@implementation App
 - (void) playGame
 {
   NSOperationQueue *operation;
@@ -145,7 +148,8 @@ static struct Speed {
                                                         GLUT_ACTION_GLUTMAINLOOP_RETURNS);
                                           setupDisplay(game->screen);
                                           switchCallbacks(&gameCallbacks);
-                                          glutMainLoop(); };
+                                          glutMainLoop();
+                                          [start setIsVisible: YES]; };
 
   [start setIsVisible: NO];
   resetScores();
@@ -242,10 +246,10 @@ static struct Speed {
 #endif
   /* Window setup. */
   superview = [start = [[Start alloc] initWithContentRect: rect = NSMakeRect(0, 0, 400, 300)
-                                      styleMask: NSWindowStyleMaskTitled |
-                                                 NSWindowStyleMaskClosable |
-                                                 NSWindowStyleMaskMiniaturizable
-                                      backing: NSBackingStoreBuffered defer: NO] contentView];
+                           styleMask: NSWindowStyleMaskTitled |
+                                      NSWindowStyleMaskClosable |
+                                      NSWindowStyleMaskMiniaturizable
+                             backing: NSBackingStoreBuffered defer: NO] contentView];
   [start setDelegate: start];
   [start setIsVisible: YES];
   [start setTitle: @"GLtron"];
