@@ -160,21 +160,18 @@ void setupDisplay(gDisplay *d) {
 
 }
 
-@class App;
+@class App, NSApplication;
 struct Arguments args;
 
 int main( int argc, char *argv[] ) {
-#ifdef __FreeBSD__
-  fpsetmask(0);
-#endif
+  NSApplication *app;
 
-  glutInit(args.argc = &argc, args.argv = argv);
-
-  [[App sharedApplication] run];
-  setupDisplay(game->screen);
-  switchCallbacks(&gameCallbacks);
-
-  glutMainLoop();
+  args.argc = &argc;
+  args.argv = argv;
+  
+  app = [App sharedApplication];
+  [app setDelegate: app];
+  [app run];
 
   return 0;
 }

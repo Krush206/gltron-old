@@ -130,30 +130,35 @@ static struct Speed {
 }
 @end
 
-@implementation Start
-- (BOOL) windowShouldClose: (NSWindow *) sender
-{
-  [NSThread exit];
-
-  return YES;
-}
-@end
-
 @implementation App
+- (void) stop: (id) sender
+{
+  glutLeaveMainLoop();
+  [start setIsVisible: YES];
+}
+
 - (void) playGame
 {
+  NSOperationQueue *operation;
+  static void (^glutOperation)(void) = ^{ glutInit(args.argc, args.argv);
+                                          glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
+                                                        GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+                                          setupDisplay(game->screen);
+                                          switchCallbacks(&gameCallbacks);
+                                          glutMainLoop(); };
+
+  [start setIsVisible: NO];
   resetScores();
   initData();
   saveSettings();
-  [start setIsVisible: NO];
-  [self stop: self];
+  operation = [NSOperationQueue new];
+  [operation addOperationWithBlock: glutOperation];
 }
 
 - (void) loop
 {
   NSEvent *event;
 
-  [start setIsVisible: YES];
   while((event = [self nextEventMatchingMask: NSAnyEventMask
                        untilDate: [NSDate distantFuture]
                        inMode: NSDefaultRunLoopMode
@@ -193,7 +198,7 @@ static struct Speed {
   }
 }
 
-- (void) run
+- (void) applicationDidFinishLaunching: (NSNotification *) notification
 {
   NSButton *button;
   Field *field;
@@ -203,8 +208,14 @@ static struct Speed {
   NSImageView *imgView;
   SoundMenu *soundMenu;
   GameMenu *gameMenu;
+  NSMenu *menu;
+  NSMenuItem *item;
   char *path;
 
+  /* Initial setup. */
+#ifdef __FreeBSD__
+  fpsetmask(0);
+#endif
   /* Load settings. */
   path = getFullPath("settings.txt");
   if(path != 0)
@@ -231,19 +242,20 @@ static struct Speed {
 #endif
   /* Window setup. */
   superview = [start = [[Start alloc] initWithContentRect: rect = NSMakeRect(0, 0, 400, 300)
-                           styleMask: NSWindowStyleMaskTitled |
-                                      NSWindowStyleMaskClosable |
-                                      NSWindowStyleMaskMiniaturizable
-                             backing: NSBackingStoreBuffered defer: NO] contentView];
+                                      styleMask: NSWindowStyleMaskTitled |
+                                                 NSWindowStyleMaskClosable |
+                                                 NSWindowStyleMaskMiniaturizable
+                                      backing: NSBackingStoreBuffered defer: NO] contentView];
   [start setDelegate: start];
+  [start setIsVisible: YES];
   [start setTitle: @"GLtron"];
   [start center];
-  dock = [[[self dockTile] contentView] window];
-  [dock setTitle: @"GLtron"];
-  [dock setOpaque: NO];
-  [dock setBackgroundColor: [NSColor clearColor]];
-  [dock setIsVisible: YES];
-  [dock display];
+  [self setMainMenu: menu = [[NSMenu alloc] initWithTitle: @"GLtron"]];
+  item = [NSMenuItem new];
+  [item setTitle: @"Exit"];
+  [item setTarget: [NSThread class]];
+  [item setAction: @selector(exit)];
+  [menu addItem: item];
   /* Main menu. */
   view[0] = [[NSView alloc] initWithFrame: rect];
   img = [[NSImage alloc] initWithContentsOfFile: @"./gltron.tiff"];
@@ -374,8 +386,6 @@ static struct Speed {
   initGameStructures();
   /* Show main menu. */
   [superview addSubview: view[0]];
-  [self setDelegate: self];
-  [self finishLaunching];
   [self loop];
 }
 @end

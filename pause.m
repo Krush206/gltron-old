@@ -26,16 +26,13 @@ void displayPause() {
 void keyboardPause(unsigned char key, int x, int y) {
   switch(key) {
   case 27:
-    [NSApp loop];
+    [NSApp stop: NSApp];
     break;
   case ' ':
     if(game->pauseflag & PAUSE_GAME_FINISHED)
       initData();
     lasttime = getElapsedTime();
     switchCallbacks(&gameCallbacks);
-    break;
-  case 'q':
-    exit(1);
     break;
   }
 }
