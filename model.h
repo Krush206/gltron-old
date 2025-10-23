@@ -7,61 +7,26 @@
 /* warning: changing this will break drawModel() */
 #define MODEL_FACESIZE 4
 
-@interface Materials: NSObject
-{
+typedef struct {
   float ambient[4];
   float diffuse[4];
   float specular[4];
   char *name;
-}
+} Material;
 
-- (void) setName: (NSString *) o;
-- (void) setAmbient: (float *) o;
-- (void) setDiffuse: (float *) o;
-- (void) setSpecular: (float *) o;
-- (NSString *) getName;
-- (float *) getAmbient;
-- (float *) getDiffuse;
-- (float *) getSpecular;
-@end
-
-@interface MeshPart: NSObject
-{
+typedef struct {
   int nFaces;
-  NSData *facesizes;
-  NSData *vertices;
-  NSData *normals;
-}
+  int *facesizes;
+  float *vertices;
+  float *normals;
+} MeshPart;
 
-- (void) setNFaces: (int) o;
-- (void) setFaceSizes: (NSData *) o;
-- (void) setVertices: (NSData *) o;
-- (void) setNormals: (NSData *) o;
-- (int) getNFaces;
-- (NSData *) getFaceSizes;
-- (NSData *) getVertices;
-- (NSData *) getNormals;
-@end
-
-@interface Mesh: NSObject
-{
+typedef struct {
   int nFaces;
   int nMaterials;
   Material *materials;
-  NSArray *meshparts;
+  MeshPart *meshparts;
   float bbox[3];
-}
-
-- (void) setNFaces: (int) o;
-- (void) setNMaterials: (int) o;
-- (void) setMaterials: (Material *) o;
-- (void) setMeshPart: (MeshPart *) o;
-- (void) setBBox: (float *) o;
-- (int) getNFaces;
-- (int) getNMaterials;
-- (Material *) getMaterials;
-- (MeshPart *) getMeshPart;
-- (float *) getBBox;
-@end
+} Mesh;
 
 #endif

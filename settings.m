@@ -1,17 +1,19 @@
-#import "gltron.h"
+#include "gltron.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define BUFSIZE 100
 
-@implementation Settings
-static Settings *settings;
-
-- (void) initSettingData: (NSString *) filename
+@implementation GLtron (Settings)
+- (void) initSettingDataWithFile: (char *) filename
 {
   FILE *f;
   int n, i, count, j;
-  char buf[BUFSIZE], c;
+  char buf[BUFSIZE];
+  char c;
 
-  f = fopen([filename UTF8String], "r");
+  f = fopen(filename, "r");
   fgets(buf, BUFSIZE, f);
   sscanf(buf, "%d ", &n);
   for(i = 0; i < n; i++) {
@@ -19,213 +21,196 @@ static Settings *settings;
     sscanf(buf, "%c%d ", &c, &count);
     switch(c) {
     case 'i': /* it's int */
-    {
-      NSMutableArray *si_arr = [NSMutableArray new];
-
+      si = malloc(sizeof(struct settings_int) * count);
+      si_count = count;
       for(j = 0; j < count; j++) {
-        SettingsInt *si = [SettingsInt new];
-
-        fgets(buf, BUFSIZE, f);
+	fgets(buf, BUFSIZE, f);
 	buf[31] = 0;
-	[si setName: [[NSString alloc] initWithUTF8String: buf]];
-        [si_arr addObject: si];
+	sscanf(buf, "%s ", (si + j)->name);
       }
-      settings_int = si_arr;
-
       break;
-    }
     case 'f': /* float */
-    {
-      NSMutableArray *sf_arr = [NSMutableArray new];
-
+      sf = malloc(sizeof(struct settings_float) * count);
+      sf_count = count;
       for(j = 0; j < count; j++) {
-        SettingsFloat *sf = [SettingsFloat new];
-
-        fgets(buf, BUFSIZE, f);
+	fgets(buf, BUFSIZE, f);
 	buf[31] = 0;
-	[sf setName: [[NSString alloc] initWithUTF8String: buf]];
-        [sf_arr addObject: sf];
+	sscanf(buf, "%s ", (sf + j)->name);
       }
-      settings_float = sf_arr;
-
       break;
-    }
     default:
       printf("unrecognized type '%c' in settings.txt\n", c);
       exit(1);
     }
   }
-  fclose(f);
 
-  [[settings_int objectAtIndex: 0] setValue: &show_help];
-  [[settings_int objectAtIndex: 1] setValue: &show_fps];
-  [[settings_int objectAtIndex: 2] setValue: &show_wall];
-  [[settings_int objectAtIndex: 3] setValue: &show_glow];
-  [[settings_int objectAtIndex: 4] setValue: &show_2d];
-  [[settings_int objectAtIndex: 5] setValue: &show_alpha];
-  [[settings_int objectAtIndex: 6] setValue: &show_floor_texture];
-  [[settings_int objectAtIndex: 7] setValue: &show_line_spacing];
-  [[settings_int objectAtIndex: 8] setValue: &erase_crashed];
-  [[settings_int objectAtIndex: 9] setValue: &fast_finish];
-  [[settings_int objectAtIndex: 10] setValue: &fov];
-  [[settings_int objectAtIndex: 11] setValue: &width];
-  [[settings_int objectAtIndex: 12] setValue: &height];
-  [[settings_int objectAtIndex: 13] setValue: &show_ai_status];
-  [[settings_int objectAtIndex: 14] setValue: &camType];
-  [[settings_int objectAtIndex: 15] setValue: &display_type];
-  [[settings_int objectAtIndex: 16] setValue: &playSound];
-  [[settings_int objectAtIndex: 17] setValue: &show_model];
-  [[settings_int objectAtIndex: 18] setValue: &ai_player1];
-  [[settings_int objectAtIndex: 19] setValue: &ai_player2];
-  [[settings_int objectAtIndex: 20] setValue: &ai_player3];
-  [[settings_int objectAtIndex: 21] setValue: &ai_player4];
-  [[settings_int objectAtIndex: 22] setValue: &show_crash_texture];
-  [[settings_int objectAtIndex: 23] setValue: &turn_cycle];
-  [[settings_int objectAtIndex: 24] setValue: &mouse_warp];
-  [[settings_int objectAtIndex: 25] setValue: &sound_driver];
+  si[0].value = &(game->settings->show_help);
+  si[1].value = &(game->settings->show_fps);
+  si[2].value = &(game->settings->show_wall);
+  si[3].value = &(game->settings->show_glow);
+  si[4].value = &(game->settings->show_2d);
+  si[5].value = &(game->settings->show_alpha);
+  si[6].value = &(game->settings->show_floor_texture);
+  si[7].value = &(game->settings->line_spacing);
+  si[8].value = &(game->settings->erase_crashed);
+  si[9].value = &(game->settings->fast_finish);
+  si[10].value = &(game->settings->fov);
+  si[11].value = &(game->settings->width);
+  si[12].value = &(game->settings->height);
+  si[13].value = &(game->settings->show_ai_status);
+  si[14].value = &(game->settings->camType);
+  si[15].value = &(game->settings->display_type);
+  si[16].value = &(game->settings->playSound);
+  si[17].value = &(game->settings->show_model);
+  si[18].value = &(game->settings->ai_player1);
+  si[19].value = &(game->settings->ai_player2);
+  si[20].value = &(game->settings->ai_player3);
+  si[21].value = &(game->settings->ai_player4);
+  si[22].value = &(game->settings->show_crash_texture);
+  si[23].value = &(game->settings->turn_cycle);
+  si[24].value = &(game->settings->mouse_warp);
+  si[25].value = &(game->settings->sound_driver);
 
-  [[settings_float objectAtIndex: 0] setValue: &speed];
+  sf[0].value = &(game->settings->speed);
 }
 
-- (int) getVi: (char *) name
+- (int *) getViWithName: (char *) name
 {
   int i;
-  
-  for(i = 0; i < [settings_int count]; i++) {
-    if(strstr(name, [[[settings_int objectAtIndex: i] getName] UTF8String]) == name) 
-      return [[settings_int objectAtIndex: i] getValue];
+  for(i = 0; i < si_count; i++) {
+    if(strstr(name, si[i].name) == name) 
+      return si[i].value;
   }
   return 0;
 }
 
-- (void) initMainGameSettings: (NSString *) filename
+- (void) initSettingsWithFile: (char *) filename
 {
-  Game *game = [Game getGame];
-  NSString *fname;
-  FILE *f;
-  char *home, buf[100];
+  char *fname, *home;
+  char buf[100];
+  char expbuf[100];
   int i;
+  FILE* f;
 
-  [self initSettingData: filename];
+  game = &main_game;
+  game->settings = (Settings*) malloc(sizeof(Settings));
+  [self initSettingDataWithFile: filename];
 
   /* initialize defaults, then load modifications from file */
 
-  [game setPauseFlag: 0];
+  game->pauseflag = 0;
 
-  show_help = 0;
-  show_fps = 1;
-  show_wall = 1;
-  show_glow = 1;
-  show_2d = 0;
-  show_alpha = 1;
-  show_floor_texture = 1;
-  show_crash_texture = 1;
-  show_model = 1;
-  turn_cycle = 1;
-  line_spacing = 1;
-  erase_crashed = 0;
-  fast_finish = 1;
-  fov = 105;
-  speed = 4.2;
-  width = 640;
-  height = 480;
-  show_ai_status = 1;
-  camType = 0;
-  mouse_warp = 0;
+  game->settings->show_help = 0;
+  game->settings->show_fps = 1;
+  game->settings->show_wall = 1;
+  game->settings->show_glow = 1;
+  game->settings->show_2d = 0;
+  game->settings->show_alpha = 1;
+  game->settings->show_floor_texture = 1;
+  game->settings->show_crash_texture = 1;
+  game->settings->show_model = 1;
+  game->settings->turn_cycle = 1;
+  game->settings->line_spacing = 20;
+  game->settings->erase_crashed = 0;
+  game->settings->fast_finish = 1;
+  game->settings->fov = 105;
+  game->settings->speed = 4.2;
+  game->settings->width = 640;
+  game->settings->height = 480;
+  game->settings->show_ai_status = 1;
+  game->settings->camType = 0;
+  game->settings->mouse_warp = 0;
 
-  display_type = 0;
-  playSound = 1;
+  game->settings->display_type = 0;
+  game->settings->playSound = 1;
 
-  ai_player1 = 0;
-  ai_player2 = 1;
-  ai_player3 = 1;
-  ai_player4 = 1;
+  game->settings->ai_player1 = 0;
+  game->settings->ai_player2 = 1;
+  game->settings->ai_player3 = 1;
+  game->settings->ai_player4 = 1;
   
-  sound_driver = 0;
+  game->settings->sound_driver = 0;
 
   /* not included in .gltronrc */
 
-  screenSaver = 0;
-  windowMode = 0;
-  content[0] = 0;
-  content[1] = 1;
-  content[2] = 2;
-  content[3] = 3;
+  game->settings->screenSaver = 0;
+  game->settings->windowMode = 0;
+  game->settings->content[0] = 0;
+  game->settings->content[1] = 1;
+  game->settings->content[2] = 2;
+  game->settings->content[3] = 3;
 
   /* go for .gltronrc (or whatever is defined in RC_NAME) */
 
   home = getenv(HOMEVAR);
-  if(home == NULL)
-    fname = [[NSString alloc] initWithFormat: @"%@%c%@", CURRENT_DIR, SEPERATOR, RC_NAME];
-  else
-    fname = [[NSString alloc] initWithFormat: @"%@%c%@", home, SEPERATOR, RC_NAME];
-  f = fopen([fname UTF8String], "r");
+  if(home == 0) /* evaluate homedir */ {
+    fname = malloc(strlen(CURRENT_DIR) + strlen(RC_NAME) + 2);
+    sprintf(fname, "%s%c%s", CURRENT_DIR, SEPERATOR, RC_NAME);
+  }
+  else {
+    fname = malloc(strlen(home) + strlen(RC_NAME) + 2);
+    sprintf(fname, "%s%c%s", home, SEPERATOR, RC_NAME);
+  }
+  f = fopen(fname, "r");
   if(f == 0) {
     printf("no %s found - using defaults\n", fname);
     return; /* no rc exists */
   }
   while(fgets(buf, sizeof(buf), f)) {
     /* process rc-file */
-    NSString *expbuf;
 
     if(strstr(buf, "iset") == buf) {
       /* linear search through settings */
       /* first: integer */
-      for(i = 0; i < [settings_int count]; i++) {
-        expbuf = [[NSString alloc] initWithFormat: @"iset %@ ", [[settings_int objectAtIndex: i] getName]];
-	if(strstr(buf, [expbuf UTF8String]) == buf) {
-          int *si_value = [[settings_int objectAtIndex: i] getValue];
-
-	  sscanf(buf + [expbuf length], "%d ", si_value);
-	  printf("assignment: %s\t%d\n", [[[settings_int objectAtIndex: i] getName] UTF8String], *si_value);
+      for(i = 0; i < si_count; i++) {
+	sprintf(expbuf, "iset %s ", si[i].name);
+	if(strstr(buf, expbuf) == buf) {
+	  sscanf(buf + strlen(expbuf), "%d ", si[i].value);
+	  printf("assignment: %s\t%d\n", si[i].name, *(si[i].value));
 	  break;
 	}
       }
     } else if(strstr(buf, "fset") == buf) {
-      for(i = 0; i < [settings_float count]; i++) {
-        expbuf = [[NSString alloc] initWithFormat: @"fset %@ ", [[settings_float objectAtIndex: i] getName]];
-	if(strstr(buf, [expbuf UTF8String]) == buf) {
-          float *sf_value = [[settings_float objectAtIndex: i] getValue];
-
-	  sscanf(buf + [expbuf length], "%f ", sf_value);
-	  printf("assignment: %s\t%.2f\n", [[[settings_float objectAtIndex: i] getName] UTF8String], *sf_value);
+      for(i = 0; i < sf_count; i++) {
+	sprintf(expbuf, "fset %s ", sf[i].name);
+	if(strstr(buf, expbuf) == buf) {
+	  sscanf(buf + strlen(expbuf), "%f ", sf[i].value);
+	  printf("assignment: %s\t%.2f\n", sf[i].name, *(sf[i].value));
 	  break;
 	}
       }
     }
   }
+  free(fname);
   fclose(f);
 }
 
 - (void) saveSettings
 {
-  FILE *f;
-  NSString *fname;
-  char *home;
+  char *fname;
   int i;
+  FILE* f;
 
-  home = getenv(HOMEVAR);
-  if(home == NULL)
-    fname = [[NSString alloc] initWithFormat: @"%@%c%@", CURRENT_DIR, SEPERATOR, RC_NAME];
-  else
-    fname = [[NSString alloc] initWithFormat: @"%@%c%@", home, SEPERATOR, RC_NAME];
-  f = fopen([fname UTF8String], "w");
+  if(getenv("HOME") == 0) /* evaluate homedir */ {
+    fname = malloc(strlen(CURRENT_DIR) + strlen(RC_NAME) + 2);
+    sprintf(fname, "%s%c%s", CURRENT_DIR, SEPERATOR, RC_NAME);
+  }
+  else {
+    fname = malloc(strlen(getenv("HOME")) + strlen(RC_NAME) + 2);
+    sprintf(fname, "%s%c%s", getenv("HOME"), SEPERATOR, RC_NAME);
+  }
+  f = fopen(fname, "w");
   if(f == 0) {
-    printf("can't open %s ", [fname UTF8String]);
+    printf("can't open %s ", fname);
     perror("for writing");
     return; /* can't write rc */
   }
-  for(i = 0; i < [settings_int count]; i++) {
-    int *si_value = [[settings_int objectAtIndex: i] getValue];
-
-    fprintf(f, "iset %s %d\n", [[[settings_int objectAtIndex: i] getName] UTF8String], *si_value);
-  }
-  for(i = 0; i < [settings_float count]; i++) {
-    int *sf_value = [[settings_float objectAtIndex: i] getValue];
-
-    fprintf(f, "fset %s %.2f\n", [[[settings_float objectAtIndex: i] getName] UTF8String], *sf_value);
-  }
-  printf("written settings to %s\n", [fname UTF8String]);
+  for(i = 0; i < si_count; i++)
+    fprintf(f, "iset %s %d\n", si[i].name, *(si[i].value));
+  for(i = 0; i < sf_count; i++)
+    fprintf(f, "fset %s %.2f\n", sf[i].name, *(sf[i].value));
+  printf("written settings to %s\n", fname);
+  free(fname);
   fclose(f);
 }
 @end

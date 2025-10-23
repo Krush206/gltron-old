@@ -1,16 +1,22 @@
-#import "model.h"
-#import "geom.h"
+#include "gltron.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_V 30000
 #define MAX_F 20000
 #define MAX_N 30000
 
-#define FAIL(X) printf(X); return 0;
+#define FAIL(X) free(vert); free(face); free(norm); free(normi); \
+                printf(X); return 0;
 
-@implementation Model
-static Mesh *mesh;
-
-- (void) rescaleVertices: (float *) vertices size: (float) size nVertices: (int) nVertices BBox: (float *) bbox {
+@implementation GLtron (Model)
+- (void) rescaleVertices: (float *) vertices
+         size: (float) size
+	 count: (int) nVertices
+	 box: (float *) bbox
+{
   float x, y, z, xmax, ymax, zmax, max;
   float *f;
   int i;
@@ -67,20 +73,24 @@ static Mesh *mesh;
 	*/
 }
   
-- (Mesh *) loadModel: (const char *) filename size: (float) size flags: (int) flags {
+- (Mesh *) loadModelWithFile: (const char *) filename
+           size: (float) size
+           flags: (int) flags
+{
   /* faces: only quads or triangles at the moment */
-  Mesh *mesh;
-  NSArray *materials;
-  MTLlib *mtllib = [MTLlib new];
+  Mesh* mesh;
+  Material *materials;
 
   FILE *f;
   char buf[120];
   char namebuf[120];
-  NSString *path;
+  char *path;
 
-  NSMutableData *face, *vert, *norm,
-	 *normi, *matIndex, *pMatCount,
-	 *meshVerts, *meshNorms, *meshFacesize;
+  float *vert;
+  int *face;
+  float *norm;
+  int *normi;
+  int *matIndex;
   
   float *vertex, *normal;
 
@@ -88,8 +98,12 @@ static Mesh *mesh;
   int nVertices = 0;
   int nFaces = 0;
 
+  float *meshVerts;
+  float *meshNorms;
+  int *meshFacesize;
   int currentMat = 0;
   int matCount = 0;
+  int *pMatCount;
   int iLine = 0;
 
   float t1[3], t2[3], t3[3];
@@ -102,30 +116,33 @@ static Mesh *mesh;
     return 0;
   }
 
-  vert = [[NSMutableData alloc] initWithLength: sizeof(float) * 3 * MAX_V];
-  face = [[NSMutableData alloc] initWithLength: sizeof(int) * MODEL_FACESIZE * MAX_F];
-  matIndex = [[NSMutableData alloc] initWithLength: sizeof(int) * MAX_F];
-  normi = [[NSMutableData alloc] initWithLength: sizeof(int) * MODEL_FACESIZE * MAX_F];
-  norm = [[NSMutableData alloc] initWithLength: sizeof(float) * 3 * MAX_N];
-
+  vert = (float *) malloc(sizeof(float) * 3 * MAX_V);
+  face = (int *) malloc(sizeof(int) * MODEL_FACESIZE * MAX_F);
+  matIndex = (int *) malloc(sizeof(int) * MAX_F);
+  normi = (int *) malloc(sizeof(int) * MODEL_FACESIZE * MAX_F);
+  norm = (float *) malloc(sizeof(float) * 3 * MAX_N);
+  
   while(fgets(buf, sizeof(buf), f)) {
     switch(buf[0]) {
     case 'm': /* material library? */
       if(sscanf(buf, "mtllib %s ", namebuf) == 1) {
 	/* load material library */
-        path = getFullPath([[NSString alloc] initWithUTF8String: namebuf]);
-	if(path == nil) {
+	path = [self fullPathWithFile: namebuf];
+	if(path == 0) {
 	  fprintf(stderr, "fatal: can't find mtllib '%s'\n", namebuf);
 	  exit(1);
 	}
-	matCount = [mtllib loadMaterials: path materials: &materials];
+	matCount = [self loadMaterialsWithFile: path
+                         materials: &materials];
 	if(matCount <= 0) {
 	  fprintf(stderr, "fatal: no Materials loaded\n");
 	  exit(1);
 	} else {
 	  /* printf("loaded %d Materials\n", matCount); */
 	}
-	pMatCount = [[NSMutableData alloc] initWithLength: sizeof(int) * matCount];
+	pMatCount = (int*) malloc(sizeof(int) * matCount);
+	for(i = 0; i < matCount; i++)
+	  pMatCount[i] = 0;
 	currentMat = 0;
       } else
 	fprintf(stderr, "warning: ignored line %d\n", iLine);
@@ -133,7 +150,7 @@ static Mesh *mesh;
     case 'u': /* material name */
       if(sscanf(buf, "usemtl %s ", namebuf) == 1) {
 	for(i = 0; i < matCount; i++) {
-	  if(strcmp(namebuf, [[[materials objectAtIndex: i] getName] UTF8String]) == 0) {
+	  if(strcmp(namebuf, (materials + i)->name) == 0) {
 	    currentMat = i;
 	    break; /* break out of if */
 	  }
@@ -147,13 +164,13 @@ static Mesh *mesh;
 	  FAIL("vertex limit exceeded\n") ;
 	}
 	c = sscanf(buf, "v %f %f %f ",
-		   &((float *) [vert mutableBytes])[nVertices * 3],
-		   &((float *) [vert mutableBytes])[nVertices * 3 + 1],
-		   &((float *) [vert mutableBytes])[nVertices * 3 + 2]);
+		   vert + nVertices * 3,
+		   vert + nVertices * 3 + 1,
+		   vert + nVertices * 3 + 2);
 
 	for(i = c; i < 3; i++) {
 	  printf("this should not happen\n");
-	  ((float *) [vert mutableBytes])[nVertices * 3 + i] = 0;
+	  *(vert + nVertices * 3 + i) = 0;
 	}
 	nVertices++;
 	break;
@@ -163,12 +180,12 @@ static Mesh *mesh;
 	  FAIL("normals limit exceeded\n") ;
 	}
 	c = sscanf(buf, "vn %f %f %f ", 
-		   &((float *) [norm mutableBytes])[nNormals * 3],
-		   &((float *) [norm mutableBytes])[nNormals * 3 + 1],
-		   &((float *) [norm mutableBytes])[nNormals * 3 + 2]);
+		   norm + nNormals * 3,
+		   norm + nNormals * 3 + 1,
+		   norm + nNormals * 3 + 2);
 	for(i = c; i < 3; i++) {
 	  printf("this should not happen\n");
-	  ((float *) [norm mutableBytes])[nNormals * 3 + i] = 0;
+	  *(norm + nNormals * 3 + i) = 0;
 	  break;
 	}
 	nNormals++;
@@ -180,34 +197,34 @@ static Mesh *mesh;
 	FAIL("face limit exceeded\n") ;
       }
       /* mark material */
-      ((float *) [matIndex mutableBytes])[nFaces] = currentMat;
+      *(matIndex + nFaces) = currentMat;
       if(matCount > 0)
-	((int *) [pMatCount mutableBytes])[currentMat]++;
+	pMatCount[currentMat]++;
 
       if(hasNorms) {
 	c = sscanf(buf, "f %d//%d %d//%d %d//%d %d//%d ",
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE],
-		   &((int *) [normi mutableBytes])[nFaces * MODEL_FACESIZE],
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + 1],
-		   &((int *) [normi mutableBytes])[nFaces * MODEL_FACESIZE + 1],
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + 2],
-		   &((int *) [normi mutableBytes])[nFaces * MODEL_FACESIZE + 2],
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + 3],
-		   &((int *) [normi mutableBytes])[nFaces * MODEL_FACESIZE + 3]);
+		   face + nFaces * MODEL_FACESIZE,
+		   normi + nFaces * MODEL_FACESIZE,
+		   face + nFaces * MODEL_FACESIZE + 1,
+		   normi + nFaces * MODEL_FACESIZE + 1,
+		   face + nFaces * MODEL_FACESIZE + 2,
+		   normi + nFaces * MODEL_FACESIZE + 2,
+		   face + nFaces * MODEL_FACESIZE + 3,
+		   normi + nFaces * MODEL_FACESIZE + 3);
 	for(i = c / 2; i < MODEL_FACESIZE; i++) {
-	  ((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + i] = -1;
-	  ((int *) [normi mutableBytes])[nFaces * MODEL_FACESIZE + i] = -1;
+	  *(face + nFaces * MODEL_FACESIZE + i) = -1;
+	  *(normi + nFaces * MODEL_FACESIZE + i) = -1;
 	}
 
 	nFaces++;
       } else {
 	c = sscanf(buf, "f %d %d %d %d ",
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE],
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + 1],
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + 2],
-		   &((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + 3],
+		   face + nFaces * MODEL_FACESIZE,
+		   face + nFaces * MODEL_FACESIZE + 1,
+		   face + nFaces * MODEL_FACESIZE + 2,
+		   face + nFaces * MODEL_FACESIZE + 3);
 	for(i = c; i < MODEL_FACESIZE; i++)
-	  ((int *) [face mutableBytes])[nFaces * MODEL_FACESIZE + i] = -1;
+	  *(face + nFaces * MODEL_FACESIZE + i) = -1;
 	nFaces++;
       }
       break;
@@ -217,17 +234,17 @@ static Mesh *mesh;
   if(hasNorms == 0) {
     /* create Normals */
     for(i = 0; i < nFaces; i++) {
-      t1[0] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE] - 1)];
-      t1[1] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE] - 1) + 1];
-      t1[2] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE] - 1) + 2];
+      t1[0] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 0) - 1) + 0);
+      t1[1] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 0) - 1) + 1);
+      t1[2] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 0) - 1) + 2);
 
-      t1[0] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE + 1] - 1)];
-      t1[1] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE + 1] - 1) + 1];
-      t1[2] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE + 1] - 1) + 2];
+      t2[0] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 1) - 1) + 0);
+      t2[1] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 1) - 1) + 1);
+      t2[2] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 1) - 1) + 2);
 
-      t1[0] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE + 2] - 1)];
-      t1[1] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE + 2] - 1) + 1];
-      t1[2] = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[i * MODEL_FACESIZE + 2] - 1) + 2];
+      t3[0] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 2) - 1) + 0);
+      t3[1] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 2) - 1) + 1);
+      t3[2] = *(vert + 3 * (*(face + i * MODEL_FACESIZE + 2) - 1) + 2);
       /*
       printf("face %d:\n", i);
       printf("v1: %f %f %f\n", t1[0], t1[1], t1[2]);
@@ -240,14 +257,16 @@ static Mesh *mesh;
       t2[0] -= t3[0];
       t2[1] -= t3[1];
       t2[2] -= t3[2];
-      normcrossprod(t1, t2, t3);
+      [self normalizeCrossProdWithVertice: t1
+            vertice: t2
+            out: t3];
       /* printf("normal: %f %f %f\n\n", t3[0], t3[1], t3[2]); */
       /* t3 now contains the face normal */
       for(j = 0; j < MODEL_FACESIZE; j++) 
-	((float *) [norm mutableBytes])[i * MODEL_FACESIZE + j] = nNormals + 1;
-      ((float *) [norm mutableBytes])[nNormals * 3] = t3[0];
-      ((float *) [norm mutableBytes])[nNormals * 3 + 1] = t3[1];
-      ((float *) [norm mutableBytes])[nNormals * 3 + 2] = t3[2];
+	*(normi + i * MODEL_FACESIZE + j) = nNormals + 1;
+      *(norm + nNormals * 3 + 0) = t3[0];
+      *(norm + nNormals * 3 + 1) = t3[1];
+      *(norm + nNormals * 3 + 2) = t3[2];
       nNormals++;
     }
     /* printf("generated %d normals\n", nNormals); */
@@ -259,16 +278,17 @@ static Mesh *mesh;
     float dif[] = { 0.4, 0.4, 0.4, 1};
     float amb[] = { 0.25, 0.25, 0.25, 1};
 
-    materials = [[NSArray alloc] initWithObjects: [Materials new]];
-    [[materials firstObject] setName: [[NSString alloc] initWithUTF8String: "default"]];
+    materials = (Material*) malloc(sizeof(Material));
+    materials->name = (char*) malloc(strlen("default") + 1);
+    sprintf(materials->name, "default");
     
-    memcpy([[materials firstObject] getAmbient], amb, 3 * sizeof(float));
-    memcpy([[materials firstObject] getDiffuse], dif, 3 * sizeof(float));
-    memcpy([[materials firstObject] getSpecular], spec, 3 * sizeof(float));
+    memcpy(materials->ambient, amb, 3 * sizeof(float));
+    memcpy(materials->diffuse, dif, 3 * sizeof(float));
+    memcpy(materials->specular, spec, 3 * sizeof(float));
 
     matCount = 1;
-    pMatCount = [[NSMutableData alloc] initWithLength: sizeof(int)];
-    ((int *) [pMatCount mutableBytes])[0] = nFaces;
+    pMatCount = (int*) malloc(sizeof(int));
+    pMatCount[0] = nFaces;
   }
   /* everything is parsed, now allocate memory and */
   /* rescale and get bbox */
@@ -280,44 +300,46 @@ static Mesh *mesh;
     inv = -1;
   } else inv = 1;
 
-  mesh = [Mesh new];
+  mesh = (Mesh*) malloc(sizeof(Mesh));
 
   /* rescale */
 
-  [self rescaleVertices: (float *) [vert mutableBytes] size: size nVertices: nVertices BBox: [mesh getBBox]];
+  [self rescaleVertices: nVertices
+        size: size
+        count: nVertices
+        box: mesh->bbox];
 
-  [mesh setNFaces: nFaces];
-  [mesh setNMaterials: matCount];
-  [mesh setMaterials: materials];
-  [mesh setMeshParts: [[NSMutableData alloc] initWithLength: matCount * sizeof(int)]];
+  mesh->nFaces = nFaces;
+  mesh->nMaterials = matCount;
+  mesh->materials = materials;
+  mesh->meshparts = (MeshPart*) malloc(matCount * sizeof(MeshPart));
   for(i = 0; i < matCount; i++) {
-    meshVerts = [[NSMutableData alloc] initWithLength: ((int *) [pMatCount mutableBytes])[i] * 3 * MODEL_FACESIZE * sizeof(float)];
-    meshNorms = [[NSMutableData alloc] initWithLength: ((int *) [pMatCount mutableBytes])[i] * 3 * MODEL_FACESIZE * sizeof(float)];
-    meshFacesize = [[NSMutableData alloc] initWithLength: ((int *) [pMatCount mutableBytes])[i] * sizeof(int)];
+    meshVerts = (float*) malloc(pMatCount[i] * 3 * MODEL_FACESIZE * sizeof(float));
+    meshNorms = (float*) malloc(pMatCount[i] * 3 * MODEL_FACESIZE * sizeof(float));
+    meshFacesize = (int*) malloc(pMatCount[i] * sizeof(int));
 
     /* printf("Material %d: %d faces\n", i, pMatCount[i]); */
 
-    ((const MeshParts **) [[mesh getMeshParts] bytes])[i] = [MeshParts new];
-    [((const MeshParts **) [[mesh getMeshParts] bytes])[i] setNFaces: ((int *) [pMatCount mutableBytes])[i]];
-    [((const MeshParts **) [[mesh getMeshParts] bytes])[i] setNVertices: meshVerts];
-    [((const MeshParts **) [[mesh getMeshParts] bytes])[i] setNormals: meshNorms];
-    [((const MeshParts **) [[mesh getMeshParts] bytes])[i] setFaceSizes: meshFacesize];
+    (mesh->meshparts + i)->nFaces = pMatCount[i];
+    (mesh->meshparts + i)->vertices = meshVerts;
+    (mesh->meshparts + i)->normals = meshNorms;
+    (mesh->meshparts + i)->facesizes = meshFacesize;
     pos = 0;
     for(j = 0; j < nFaces; j++) { /* foreach face */
-      if(((float *) [matIndex mutableBytes])[j] == i) {
-	((int *) [meshFacesize mutableBytes])[pos] = 0;
+      if(matIndex[j] == i) {
+	*(meshFacesize + pos) = 0;
 	/* printf("face %d\n", j); */
 	for(k = 0; k < MODEL_FACESIZE; k++) { /* foreach vertex of face */
-	  if(((int *) [face mutableBytes])[j * MODEL_FACESIZE + k] != -1) {
-	    ((int *) [meshFacesize mutableBytes])[pos]++;
+	  if(*(face + j * MODEL_FACESIZE + k) != -1) {
+	    *(meshFacesize + pos) += 1;
 	    /* adjust facesize... */
 	    /* copy face and normal data to meshVerts, meshNorms */
-	    vertex = ((float *) [vert mutableBytes])[3 * (((int *) [face mutableBytes])[j * MODEL_FACESIZE + k] - 1)];
-	    normal = ((float *) [norm mutableBytes])[3 * (((int *) [normi mutableBytes])[j * MODEL_FACESIZE + k] - 1)];
+	    vertex = vert + 3 * ( *(face + j * MODEL_FACESIZE + k) - 1);
+	    normal = norm + 3 * ( *(normi + j * MODEL_FACESIZE + k) - 1);
 	    for(l = 0; l < 3; l++) {
 	      /* printf("%f ", vertex[l]); */
-	      ((int *) [meshVerts mutableBytes])[3 * (pos * MODEL_FACESIZE + k) + l) = *(vertex + l);
-	      ((int *) [meshNorms mutableBytes])[3 * (pos * MODEL_FACESIZE + k) + l) = inv * *(normal + l);
+	      *(meshVerts + 3 * (pos * MODEL_FACESIZE + k) + l) = *(vertex + l);
+	      *(meshNorms + 3 * (pos * MODEL_FACESIZE + k) + l) = inv * *(normal + l);
 	    }
 	    /* printf("\n"); */
 	  }
@@ -331,6 +353,13 @@ static Mesh *mesh;
       }
     }
   }
+  
+  free(vert);
+  free(face);
+  free(norm);
+  free(normi);
+  free(pMatCount);
+  free(matIndex);
 
   /* printf("loaded model: %d vertices, %d normals, %d faces, %d materials\n",
 	nVertices, nNormals, nFaces, matCount); */
@@ -338,32 +367,43 @@ static Mesh *mesh;
   return mesh;
 }
 
-void setMaterialAmbient(Mesh *mesh, int material, float color[4]) {
+- (void) setAmbientWithMesh: (Mesh *) mesh
+         material: (int) material
+         color: (float[4]) color
+{
   int i;
   for(i = 0; i < 4; i++)
     (mesh->materials + material)->ambient[i] = color[i];
 }
 
-void setMaterialDiffuse(Mesh *mesh, int material, float color[4]) {
+- (void) setDiffuseWithMesh: (Mesh *) mesh
+         material: (int) material
+         color: (float[4]) color
+{
   int i;
   for(i = 0; i < 4; i++)
     (mesh->materials + material)->diffuse[i] = color[i];
 }
 
-void setMaterialSpecular(Mesh *mesh, int material, float color[4]) {
+- (void) setSpecularWithMesh: (Mesh *) mesh
+         material: (int) material
+         color: (float[4]) color
+{
   int i;
   for(i = 0; i < 4; i++)
     (mesh->materials + material)->specular[i] = color[i];
 }
   
-void setMaterialAlphas(Mesh *mesh, float alpha) {
+- (void) setAlphaWithMesh: (Mesh *) mesh alpha: (float) alpha
+{
   int i;
   // vertex alpha is the alpha of the diffuse material component
   for(i = 0; i < mesh->nMaterials; i++)
     (mesh->materials + i)->diffuse[3] = alpha;
 }
 
-void unloadModel(Mesh *mesh) {
+- (void) unloadModelWithMesh: (Mesh *) mesh
+{
   int i;
   for(i = 0; i < mesh->nMaterials; i++) {
     // free material

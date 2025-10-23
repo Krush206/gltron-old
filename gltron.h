@@ -3,7 +3,10 @@
   Copyright (C) 1999 by Andreas Umbach <marvin@dataway.ch>
 */
 
-#import <Foundation/Foundation.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <objc/Object.h>
 
 #ifndef GLTRON_H
 #define GLTRON_H
@@ -16,7 +19,7 @@
 /* win32 additions by Jean-Bruno Richard <jean-bruno.richard@mg2.com> */
 
 #ifdef WIN32
-#import <windows.h>
+#include <windows.h>
 #define SOUND
 #define M_PI 3.141592654
 #define SEPERATOR '\\'
@@ -27,14 +30,14 @@
 /* FreeBSD additions by Andrey Zakhatov <andy@icc.surw.chel.su>  */
 
 #ifdef __FreeBSD__
-#import <floatingpoint.h>
+#include <floatingpoint.h>
 #endif
 
 /* MacOS additions by Stefan Buchholtz <sbuchholtz@online.de> */
 
 #ifdef macintosh
-#import <string.h>
-#import <console.h>
+#include <string.h>
+#include <console.h>
 #define M_PI 3.141592654
 #define SEPERATOR ':'
 #define RC_NAME "gltron.ini"
@@ -43,35 +46,35 @@
 #define COS(X)	cos( (X) * M_PI/180.0 )
 #define SIN(X)	sin( (X) * M_PI/180.0 )
 
-/* glut imports all necessary GL - Headers */
+/* glut includes all necessary GL - Headers */
 
 #ifdef FREEGLUT
-#import <GL/freeglut.h>
+#include "freeglut.h"
 #else
-#import <GL/glut.h>
-/* #import <freeglut.h> */
+#include <GL/glut.h>
+/* #include <freeglut.h> */
 #endif
 
 /* use texfont for rendering fonts as textured quads */
 /* todo: get rid of that (it's not free) */
 
-/* #import "TexFont.h" */
-#import "fonttex.h"
+/* #include "TexFont.h" */
+#include "fonttex.h"
 
 /* menu stuff */
 
-#import "menu.h"
+#include "menu.h"
 
 /* TODO(3): incorporate model stuff */
 /* model stuff */
-#import "model.h"
+#include "model.h"
 /* poly-soup stuff */
-/* #import "polysoup.h" */
+/* #include "polysoup.h" */
 
 /* do Sound */
 
 #ifdef SOUND
-#import "sound.h"
+#include "sound.h"
 #endif
 
 /* global constants */
@@ -120,119 +123,46 @@ typedef struct callbacks {
   void (*initGL)(void);
 } callbacks;
 
-@interface Line: NSObject
-{
+typedef struct line {
   float sx, sy, ex, ey;
-}
+} line;
 
-- (void) setSX: (float) o;
-- (void) setSY: (float) o;
-- (void) setEX: (float) o;
-- (void) setEY: (float) o;
-- (float) getSX;
-- (float) getSY;
-- (float) getEX;
-- (float) getEY;
-@end
-
-@interface Model: NSObject
-{
-  Mesh *mesh; /* model */
+typedef struct Model {
+  Mesh* mesh; /* model */
   float color_alpha[4]; /* alpha trail */
   float color_trail[4]; /* solid edges of trail */
   float color_model[4]; /* model color */
-}
+} Model;
 
-- (void) setMesh: (Mesh *) o;
-- (void) setColorAlpha: (float *) o;
-- (void) setColorTrail: (float *) o;
-- (void) setColorModel: (float *) o;
-- (Mesh *) getMesh;
-- (float *) getColorAlpha;
-- (float *) getColorTrail;
-- (float *) getColorModel;
-+ (void) setMesh: (Mesh *) o;
-+ (Mesh *) getMesh;
-@end
-
-@interface Data: NSObject
-{
+typedef struct Data {
   float posx; float posy;
 
-  int dir;
-  int last_dir;
+  int dir; int last_dir;
   int turn_time;
   
   int score;
   float speed; /* set to -1 when dead */
   float trail_height; /* countdown to zero when dead */
   float exp_radius; /* explosion of the cycle model */
-  Line *trails[MAX_TRAIL];
-  Line *trail; /* current trail */
-}
+  line trails[MAX_TRAIL];
+  line *trail; /* current trail */
+} Data;
 
-- (void) setPosX: (float) o;
-- (void) setPosY: (float) o;
-- (void) setDir: (int) o;
-- (void) setLastDir: (int) o;
-- (void) setTurnTime: (int) o;
-- (void) setScore: (int) o;
-- (void) setSpeed: (float) o;
-- (void) setTrailHeight: (float) o;
-- (void) setExpRadius: (float) o;
-- (void) setTrails: (Line *) o index: (int) i;
-- (void) setTrail: (float) o;
-- (float) getPosX;
-- (float) getPosY;
-- (int) getDir;
-- (int) getLastDir;
-- (int) getTurnTime;
-- (int) getScore;
-- (float) getSpeed;
-- (float) getTrailHeight;
-- (float) getExpRadius;
-- (Line **) getTrails;
-- (Line *) getTrail;
-@end
-
-@interface Camera: NSObject
-{
+typedef struct Camera {
   float cam[3];
   float target[3];
   float angle;
   int camType;
-}
+} Camera;
 
-- (void) setCam: (float *) o;
-- (void) setTarget: (float *) o;
-- (void) setAngle: (float) o;
-- (void) setCamType: (int) o;
-- (void) getCam: (float *) o;
-- (void) getTarget: (float *) o;
-- (void) getAngle: (float) o;
-- (void) getCamType: (int) o;
-@end
-
-@interface AI: NSObject
-{
+typedef struct AI {
   int active;
   int tdiff; /*  */
   int moves;
   int danger;
-}
+} AI;
 
-- (void) setActive: (int) o;
-- (void) setTDiff: (int) o;
-- (void) setMoves: (int) o;
-- (void) setDanger: (int) o;
-- (void) getActive: (int) o;
-- (void) getTDiff: (int) o;
-- (void) getMoves: (int) o;
-- (void) getDanger: (int) o;
-@end
-
-@interface GDisplay: NSObject
-{
+typedef struct gDisplay {
   int win_id;     /* nur das globale Window hat eine */
   int h, w;       /* window */
   int vp_x, vp_y; /* viewport */
@@ -246,84 +176,15 @@ typedef struct callbacks {
   unsigned int texWall;
   unsigned int texGui;
   unsigned int texCrash;
-}
+} gDisplay;
 
-- (void) setWinID: (int) o;
-- (void) setH: (int) o;
-- (void) setW: (int) o;
-- (void) setVPX: (int) o;
-- (void) setVPY: (int) o;
-- (void) setVPH: (int) o;
-- (void) setVPW: (int) o;
-- (void) setBlending: (int) o;
-- (void) setFog: (int) o;
-- (void) setWall: (int) o;
-- (void) setOnScreen: (int) o;
-- (void) setTexFloor: (unsigned int) o;
-- (void) setTexWall: (unsigned int) o;
-- (void) setTexGUI: (unsigned int) o;
-- (void) setTexCrash: (unsigned int) o;
-- (int) getWinID;
-- (int) getH;
-- (int) getW;
-- (int) getVPX;
-- (int) getVPY;
-- (int) getVPH;
-- (int) getVPW;
-- (int) getBlending;
-- (int) getFog;
-- (int) getWall;
-- (int) getOnScreen;
-- (unsigned int) getTexFloor;
-- (unsigned int) getTexWall;
-- (unsigned int) getTexGUI;
-- (unsigned int) getTexCrash;
-@end
-
-@interface Player: NSObject
-{
+typedef struct Player {
   Model *model;
   Data *data;
   Camera *camera;
-  GDisplay *display;
+  gDisplay *display;
   AI *ai;
-}
-
-- (void) setModel: (Model *) o;
-- (void) setData: (Data *) o;
-- (void) setCamera: (Camera *) o;
-- (void) setGDisplay: (GDisplay *) o;
-- (void) setAI: (AI *) o;
-- (Model *) getModel;
-- (Data *) getData;
-- (Camera *) getCamera;
-- (GDisplay *) getGDisplay;
-- (AI *) getAI;
-@end
-
-@interface SettingsInt: NSObject
-{
-  NSString *name;
-  int *value;
-}
-
-- (void) setName: (NSString *) o;
-- (void) setValue: (int *) o;
-- (NSString *) getName;
-- (int *) getValue;
-@end
-
-@interface SettingsFloat: NSObject
-{
-  NSString *name;
-  float *value;
-}
-
-- (void) setName: (NSString *) o;
-- (void) setValue: (float *) o;
-- (NSString *) getName;
-- (float *) getValue;
-@end
+} Player;
 
 /* if you want to add something and make it permanent (via
    .gltronrc) then
@@ -333,8 +194,7 @@ typedef struct callbacks {
    4) add a default to initMainGameSettings() in settings.c
    5) make a menu entry in menu.txt
 */
-@interface Settings: NSObject
-{
+typedef struct Settings {
   int show_help;
   int show_fps;
   int show_wall;
@@ -369,168 +229,432 @@ typedef struct callbacks {
 
   int sound_driver;
 
-  NSArray *settings_int,
-          *settings_float;
-}
+} Settings;
 
-- (void) setShowHelp: (int) o;
-- (void) setShowFPS: (int) o;
-- (void) setShowWall: (int) o;
-- (void) setShow2D: (int) o;
-- (void) setShowAlpha: (int) o;
-- (void) setShowFloorTexture: (int) o;
-- (void) setShowGlow: (int) o;
-- (void) setShowAIStatus: (int) o;
-- (void) setShowModel: (int) o;
-- (void) setShowCrashTextures: (int) o;
-- (void) setTurnCycle: (int) o;
-- (void) setEraseCrashed: (int) o;
-- (void) setFastFinish: (int) o;
-- (void) setDisplayType: (int) o;
-- (void) setContent: (int) o index: (int) i;
-- (void) setPlaySound: (int) o;
-- (void) setScreenSaver: (int) o;
-- (void) setWindowMode: (int) o;
-- (void) setLineSpacing: (int) o;
-- (void) setCamType: (int) o;
-- (void) setMouseWarp: (int) o;
-- (void) setSpeed: (int) o;
-- (void) setAIPlayer1: (int) o;
-- (void) setAIPlayer2: (int) o;
-- (void) setAIPlayer3: (int) o;
-- (void) setAIPlayer4: (int) o;
-- (void) setFOV: (int) o;
-- (void) setWidth: (int) o;
-- (void) setHeight: (int) o;
-- (void) setSoundDriver: (int) o;
-- (void) setSettingsInt: (NSArray *) o;
-- (void) setSettingsFloat: (NSArray *) o;
-- (int) getShowHelp;
-- (int) getShowFPS;
-- (int) getShowWall;
-- (int) getShow2D;
-- (int) getShowAlpha;
-- (int) getShowFloorTexture;
-- (int) getShowGlow;
-- (int) getShowAIStatus;
-- (int) getShowModel;
-- (int) getShowCrashTextures;
-- (int) getTurnCycle;
-- (int) getEraseCrashed;
-- (int) getFastFinish;
-- (int) getDisplayType;
-- (int *) getContent;
-- (int) getPlaySound;
-- (int) getScreenSaver;
-- (int) getWindowMode;
-- (int) getLineSpacing;
-- (int) getCamType;
-- (int) getMouseWarp;
-- (int) getSpeed;
-- (int) getAIPlayer1;
-- (int) getAIPlayer2;
-- (int) getAIPlayer3;
-- (int) getAIPlayer4;
-- (int) getFOV;
-- (int) getWidth;
-- (int) getHeight;
-- (int) getSoundDriver;
-- (int) getShowHelpAddr;
-- (int *) getShowFPSAddr;
-- (int *) getShowWallAddr;
-- (int *) getShow2DAddr;
-- (int *) getShowAlphaAddr;
-- (int *) getShowFloorTextureAddr;
-- (int *) getShowGlowAddr;
-- (int *) getShowAIStatusAddr;
-- (int *) getShowModelAddr;
-- (int *) getShowCrashTexturesAddr;
-- (int *) getTurnCycleAddr;
-- (int *) getEraseCrashedAddr;
-- (int *) getFastFinishAddr;
-- (int *) getDisplayTypeAddr;
-- (int *) getPlaySoundAddr;
-- (int *) getScreenSaverAddr;
-- (int *) getWindowModeAddr;
-- (int *) getLineSpacingAddr;
-- (int *) getCamTypeAddr;
-- (int *) getMouseWarpAddr;
-- (int *) getSpeedAddr;
-- (int *) getAIPlayer1Addr;
-- (int *) getAIPlayer2Addr;
-- (int *) getAIPlayer3Addr;
-- (int *) getAIPlayer4Addr;
-- (int *) getFOVAddr;
-- (int *) getWidthAddr;
-- (int *) getHeightAddr;
-- (int *) getSoundDriverAddr;
-- (NSArray *) getSettingsInt;
-- (NSArray *) getSettingsFloat;
-+ (void) setSettings: (Settings *) o;
-+ (Settings *) getSettings;
-@end
-
-@interface Game: NSObject
-{
-  GDisplay *screen;
-  Player *player[MAX_PLAYERS];
+typedef struct Game {
+  gDisplay *screen;
+  Settings *settings;
+  Player player[MAX_PLAYERS];
   int players;
   int winner;
   int pauseflag;
   int running;
+} Game;
 
-  int gl_error;
+typedef struct settings_int {
+  char name[32];
+  int *value;
+} settings_int;
 
-  float camAngle;
-
-  fonttex *ftx;
-  int fontID;
-
-  NSArray **pMenuList;
-  Menu *pRootMenu;
-  Menu *pCurrent;
-
-  int lasttime; 
-
-  int polycount;
-}
-
-- (void) setScreen: (GDisplay *) o;
-- (void) setPlayer: (Player *) o index: (int) i;
-- (void) setPlayers: (int) o;
-- (void) setWinner: (int) o;
-- (void) setPauseFlag: (int) o;
-- (void) setRunning: (int) o;
-- (GDisplay *) getScreen;
-- (Player **) getPlayer;
-- (int) getPlayers;
-- (int) getWinner;
-- (int) getPauseFlag;
-- (int) getRunning;
-+ (void) setGame: (Game *) o;
-+ (void) setSound: (Sound *);
-+ (Game *) getGame;
-+ (Sound *) getSound;
-@end
-
-@interface Engine: NSObject
-{
-  NSData *colmap;
-  int colwidth;
-}
-
-- (void) setColmap: (unsigned char *);
-- (unsigned char *) getColmap;
-+ (void) setEngine: (Engine *) o;
-+ (Engine *) getEngine;
-@end
+typedef struct settings_float {
+  char name[32];
+  float *value;
+} settings_float;
 
 #define PAUSE_GAME_FINISHED 1
 
+extern callbacks guiCallbacks;
+extern callbacks pauseCallbacks;
+extern callbacks gameCallbacks;
+
+extern int gl_error;
+
+extern settings_int *si;
+extern int si_count;
+extern settings_float *sf;
+extern int sf_count;
+
+extern Game main_game;
+extern Game *game;
+extern float camAngle;
+
+/* extern TexFont *txf; */
+extern fonttex *ftx;
+extern int fontID;
 #define MAX_FONTS 17
+
+extern Menu** pMenuList;
+extern Menu* pRootMenu;
+extern Menu* pCurrent;
+
+extern unsigned char* colmap;
+extern int colwidth;
+
+extern int dirsX[];
+extern int dirsY[];
+
+extern int lasttime; 
+extern double dt; /* milliseconds since last frame */
+
+extern int polycount;
+
+extern float colors_alpha[][4];
+extern float colors_trail[][4];
+extern float colors_model[][4];
+extern int vp_max[];
+extern float vp_x[3][4];
+extern float vp_y[3][4];
+extern float vp_w[3][4];
+extern float vp_h[3][4];
 
 #define HELP_LINES 18
 #define HELP_FONT GLUT_BITMAP_9_BY_15
 #define HELP_DY 20
+
+extern char *help[];
+
+@interface GLtron: Object
+- (int) getElapsedTime;
+- (void) mouseWarp;
+- (void) drawGame;
+- (void) displayGame;
+- (void) initCustomLights;
+- (void) initGLGame;
+- (int) initWindow;
+- (void) shutdownDisplayWithDisplay: (gDisplay *) d;
+- (void) setupDisplayWithDisplay: (gDisplay *) d;
++ (int) argc: (int *) argc argv: (char *[]) argv;
++ (id) getInstance;
+@end
+
+@interface GLtron (Computer)
+- (int) freewayWithData: (Data *) data direction: (int) dir;
+- (void) getDistancePointWithData: (Data *) data
+         direction: (int) d
+         x: (int *) x
+         y: (int *) y;
+- (void) doComputerWithPlayer: (Player *) me data: (Data *) him;
+@end
+
+@interface GLtron (Engine)
+- (void) setColWithX: (int) x y: (int) y;
+- (void) clearColWithX: (int) x y: (int) y;
+- (int) getColWithX: (int) x y: (int) y;
+- (void) turnWithData: (Data *) data direction: (int) direction;
+- (void) initDisplayWithDisplay: (gDisplay *) d
+         type: (int) type
+         player: (int) p
+         onScreen: (int) onScreen;
+- (void) changeDisplay;
+- (void) initGame;
+- (void) initGameStructures;
+- (void) initData;
+- (int) collDetectWithX: (float) sx
+         y: (float) sy
+         x: (float) ex
+         y: (float) ey
+         direction: (int) dir
+         x: (int *) x
+         y: (int *) y;
+- (void) doTrailWithLine: (line *) t
+         mark: (IMP) mark
+         selector: (SEL) sel;
+- (void) fixTrails;
+- (void) clearTrailsWithData: (Data *) data;
+- (void) idleGame;
+- (void) defaultDisplayWithNumber: (int) n;
+- (void) initGameDisplay;
+- (void) cycleDisplay: (int) p;
+- (void) resetScores;
+- (void) movePlayers;
+- (void) timeDiff;
+- (void) chaseCamMove;
+- (void) camMove;
+@end
+
+@interface GLtron (File)
+- (char *) fullPathWithFile: (char *) filename;
+@end
+
+@interface GLtron (Fonts)
+- (void) initFonts;
+- (void) deleteFonts;
+@end
+
+@interface GLtron (FontTexture)
+- (void) getLineWithBuffer: (char *) buf
+         size: (int) size
+         file: (FILE *) f;
+- (fonttex *) loadFontWithFile: (char *) filename;
+- (void) unloadFontWithFontTexture: (fonttex *) ftx;
+- (void) establishTextureWithFontTexture: (fonttex *) ftx
+         mipmaps: (unsigned char) setupMipmaps;
+- (void) renderStringWithFontTexture: (fonttex *) ftx
+         string: (char *) string
+         length: (int) len;
+@end
+
+@interface GLtron (GameGraphics)
+- (void) drawDebugTextureWithDisplay: (gDisplay *) d;
+- (void) drawScoreWithPlayer: (Player *) p display: (gDisplay *) d;
+- (void) drawFloorWithDisplay: (gDisplay *) d;
+- (void) drawTracesWithPlayer: (Player *) p
+         display: (gDisplay *) d
+         instance: (int) instance;
+- (void) drawCrashWithRadius: (float) radius;
+- (void) drawCycleWithPlayer: (Player *) p;
+- (int) playerVisibleWithPlayer: (Player *) eye
+        player: (Player *) target;
+- (void) drawPlayersWithPlayer: (Player *) p;
+- (void) drawGlowWithPlayer: (Player *) p
+         display: (gDisplay *) d
+         dimension: (float) dim;
+- (void) drawWallsWithDisplay: (gDisplay *) d;
+- (void) drawCameraWithPlayer: (Player *) p display: (gDisplay *) d;
+- (void) drawAIWithDisplay: (gDisplay *) d;
+- (void) drawPauseWithDisplay: (gDisplay *) display;
+@end
+
+@interface GLtron (Geometry)
+- (float) lengthWithVertice: (float[3]) v;
+- (void) normalizeWithVertice: (float[3]) v;
+- (void) crossProdWithVertice: (float[3]) v1
+         vertice: (float[3]) v2
+         out: (float[3]) vout;
+- (void) normalizeCrossProdWithVertice: (float[3]) v1
+         vertice: (float[3]) v2
+         out: (float[3]) vout;
+- (float) scalarProdWithVertice: (float[3]) v1 vertice: (float[3]) v2;
+- (void) verticeSubWithVertice: (float[3]) v1
+         vertice: (float[3]) v2
+         out: (float[3]) vout;
+- (void) verticeAddWithVertice: (float[3]) v1
+         vertice: (float[3]) v2
+         out: (float[3]) vout;
+@end
+
+@interface GLtron (Graphics)
+- (void) checkGLErrorWithSignature: (char *) where;
+- (void) rasterizerOnlyWithDisplay: (gDisplay *) d;
+- (void) drawFPSWithDisplay: (gDisplay *) d;
+- (void) drawTextWithX: (int) x
+         y: (int) y
+         size: (int) size
+         text: (char *) text;
+- (int) HSVToRGBWithH: (float) h
+        s: (float) s
+        v: (float) v
+        r: (float *) r
+        g: (float *) g
+        b: (float *) b;
+- (void) colorDisc;
+@end
+
+@interface GLtron (GUI)
+- (void) guiProjectionWithX: (int) x y: (int) y;
+- (void) displayGui;
+- (void) idleGui;
+- (void) keyboardGuiWithKey: (unsigned char) k
+         x: (int) x
+         y: (int) y;
+- (void) specialGuiWithKey: (int) key x: (int) x y: (int) y;
+- (void) initGui;
+- (void) initGLGui;
+@end
+
+@interface GLtron (Input)
+- (void) keyGameWithKey: (unsigned char) k
+         x: (int) x
+         y: (int) y;
+- (void) specialGameWithKey: (int) k
+         x: (int) x
+         y: (int) y;
+- (void) parseArgumentsWithCount: (int *) argc
+         vector: (char *[]) argv;
+@end
+
+@interface GLtron (Menu)
+- (void) changeActionWithName: (char *) name;
+- (void) menuActionWithMenu: (Menu *) activated;
+- (void) initMenuCaptionWithMenu: (Menu *) m;
+- (void) getNextLineWithBuffer: (char *) buf
+         size: (int) bufsize
+         file: (FILE *) f;
+- (Menu *) loadMenuWithFile: (FILE *) f
+           buffer: (char *) buf
+           parent: (Menu *) parent
+           level: (int) level;
+- (Menu **) loadMenuWithFile: (char *) filename;
+- (void) drawMenuWithDisplay: (gDisplay *) d;
+@end
+
+@interface GLtron (Model)
+- (void) rescaleVertices: (float *) vertices
+         size: (float) size
+         count: (int) nVertices
+         box: (float *) bbox;
+- (Mesh *) loadModelWithFile: (const char *) filename
+           size: (float) size
+           flags: (int) flags;
+- (void) setAmbientWithMesh: (Mesh *) mesh
+         material: (int) material
+         color: (float[4]) color;
+- (void) setDiffuseWithMesh: (Mesh *) mesh
+         material: (int) material
+         color: (float[4]) color;
+- (void) setSpecularWithMesh: (Mesh *) mesh
+         material: (int) material
+         color: (float[4]) color;
+- (void) setAlphaWithMesh: (Mesh *) mesh alpha: (float) alpha;
+- (void) unloadModelWithMesh: (Mesh *) mesh;
+@end
+
+@interface GLtron (ModelGraphics)
+- (void) drawWithMeshPart: (MeshPart *) meshpart flag: (int) flag;
+- (void) drawExplosionWithMeshPart: (MeshPart *) meshpart
+         radius: (float) radius
+         flag: (int) flag;
+- (void) printColorWithValues: (float *) values count: (int) count;
+- (void) drawModelWithMesh: (Mesh *) mesh
+         mode: (int) mode
+         flag: (int) flag;
+- (void) drawExplosionWithMesh: (Mesh *) mesh
+         radius: (float) radius
+         mode: (int) mode
+         flag: (int) flag;
+@end
+
+@interface GLtron (Material)
+- (int) loadMaterialsWithFile: (const char *) filename
+        materials: (Material **) materials;
+@end
+
+@interface GLtron (Pause)
+- (void) idlePause;
+- (void) displayPause;
+- (void) keyboardPauseWithKey: (unsigned char) k
+         x: (int) x
+         y: (int) y;
+- (void) specialPauseWithKey: (int) k
+         x: (int) x
+         y: (int) y;
+- (void) initPause;
+- (void) initPauseGL;
+@end
+
+@interface GLtron (Settings)
+- (void) initSettingDataWithFile: (char *) filename;
+- (int *) getViWithName: (char *) name;
+- (void) initSettingsWithFile: (char *) filename;
+- (void) saveSettings;
+@end
+
+@interface GLtron (SGI)
+- (sgi_texture *) loadSGITextureWithFile: (char *) filename;
+- (void) unloadSGITextureWithSGITexture: (sgi_texture *) tex;
+@end
+
+@interface GLtron (Sound)
+- (void) initSound;
+- (int) loadSoundWithFile: (char *) name;
+- (int) playSound;
+- (int) stopSound;
+- (void) deleteSound;
+- (void) soundIdle;
+@end
+
+@interface GLtron (Callbacks)
+- (void) switchCallbacksWithCallbacks: (callbacks *) new;
+- (void) updateCallbacks;
+- (void) restoreCallbacks;
+- (void) chooseCallbackWithName: (char *) name;
+@end
+
+@interface GLtron (Texture)
+- (void) deleteTexturesWithDisplay: (gDisplay *) d;
+- (void) loadTextureWithFile: (char *) filename
+         format: (int) format;
+- (void) initTextureWithDisplay: (gDisplay *) d;
+@end
+
+static inline void displayGui(void)
+{
+  [[GLtron getInstance] displayGui];
+}
+
+static inline void idleGui(void)
+{
+  [[GLtron getInstance] idleGui];
+}
+
+static inline void keyboardGui(unsigned char k, int x, int y)
+{
+  [[GLtron getInstance] keyboardGuiWithKey: k x: x y: y];
+}
+
+static inline void specialGui(int k, int x, int y)
+{
+  [[GLtron getInstance] specialGuiWithKey: k x: x y: y];
+}
+
+static inline void initGui(void)
+{
+  [[GLtron getInstance] initGui];
+}
+
+static inline void initGLGui(void)
+{
+  [[GLtron getInstance] initGLGui];
+}
+
+static inline void displayPause(void)
+{
+  [[GLtron getInstance] displayPause];
+}
+
+static inline void idlePause(void)
+{
+  [[GLtron getInstance] idlePause];
+}
+
+static inline void keyboardPause(unsigned char k, int x, int y)
+{
+  [[GLtron getInstance] keyboardPauseWithKey: k x: x y: y];
+}
+
+static inline void specialPause(int k, int x, int y)
+{
+  [[GLtron getInstance] specialPauseWithKey: k x: x y: y];
+}
+
+static inline void initPause(void)
+{
+  [[GLtron getInstance] initPause];
+}
+
+static inline void initPauseGL(void)
+{
+  [[GLtron getInstance] initPauseGL];
+}
+
+static inline void displayGame(void)
+{
+  [[GLtron getInstance] displayGame];
+}
+
+static inline void idleGame(void)
+{
+  [[GLtron getInstance] idleGame];
+}
+
+static inline void keyGame(unsigned char k, int x, int y)
+{
+  [[GLtron getInstance] keyGameWithKey: k x: x y: y];
+}
+
+static inline void specialGame(int k, int x, int y)
+{
+  [[GLtron getInstance] specialGameWithKey: k x: x y: y];
+}
+
+static inline void initGame(void)
+{
+  [[GLtron getInstance] initGame];
+}
+
+static inline void initGLGame(void)
+{
+  [[GLtron getInstance] initGLGame];
+}
 
 #endif

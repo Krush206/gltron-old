@@ -1,12 +1,13 @@
-#import "gltron.h"
-#import "geom.h"
+#include "gltron.h"
+#include "geom.h"
 
-@implementation GameGraphics
-- (void) drawDebugTex: (GDisplay *) d {
+@implementation GLtron (GameGraphics)
+- (void) drawDebugTextureWithDisplay: (gDisplay *) d
+{
   int x = 100;
   int y = 100;
 
-  rasonly(d);
+  [self rasterizerOnlyWithDisplay: d];
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glColor4f(.0, 1.0, .0, 1.0);
   glRasterPos2i(x, y);
@@ -20,24 +21,24 @@
   polycount++;
 }
 
-- (void) drawScore: (Player *) p display: (GDisplay *) d {
+- (void) drawScoreWithPlayer: (Player *) p display: (gDisplay *) d
+{
   char tmp[10]; /* hey, they won't reach such a score */
 
-  sprintf(tmp, "%d", [[p getData] getScore]);
-  rasonly(d);
+  sprintf(tmp, "%d", p->data->score);
+  [self rasterizerOnlyWithDisplay: d];
   glColor4f(1.0, 1.0, 0.2, 1.0);
-  drawText(5, 5, 32, tmp);
+  [self drawTextWithX: 5 y: 5 size: 32 text: tmp];
 }
   
-- (void) drawFloor: (GDisplay *) d {
+- (void) drawFloorWithDisplay: (gDisplay *) d
+{
   int j, k, l, t;
-  Game *game = [Game getGame];
-  Settings *settings = [Settings getSettings];
 
-  if([settings getShowFloorTexture]) {
+  if(game->settings->show_floor_texture) {
     glDepthMask(GL_TRUE);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, [[game getScreen] getTexFloor]);
+    glBindTexture(GL_TEXTURE_2D, game->screen->texFloor);
     /* there are some strange clipping artefacts in software mode */
     /* try subdividing things... */
     glColor4f(1.0, 1.0, 1.0, 1.0);
@@ -63,7 +64,7 @@
     /* lines as floor... */
     glColor3f(0.0, 0.0, 1.0);
     glBegin(GL_LINES);
-    for(j = 0; j <= GSIZE; j += [settings getLineSpacing]) {
+    for(j = 0; j <= GSIZE; j += game->settings->line_spacing) {
       glVertex3i(0, j, 0);
       glVertex3i(GSIZE, j, 0);
       glVertex3i(j, 0, 0);
@@ -74,43 +75,45 @@
   }
 }
 
-- (void) drawTraces: (Player *) p display: (GDisplay *) instance: (int) instance {
-  Line *line;
+- (void) drawTracesWithPlayer: (Player *) p
+         display: (gDisplay *) d
+         instance: (int) instance
+{
+  line *line;
   float height;
-  Data *data;
-  Settings *settings = [Settings getSettings];
 
-  data = [p getData];
-  height = [data getTrailHeight];
+  Data *data;
+  data = p->data;
+  height = data->trail_height;
   if(height > 0) {
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    glColor4fv([[p getModel] getColorAlpha]);
+    glColor4fv(p->model->color_alpha);
     /* glColor4f(0.5, 0.5, 0.5, 0.8); */
-    line = &([data getTrails][0]);
+    line = &(data->trails[0]);
     glBegin(GL_TRIANGLE_STRIP);
-    glVertex3f([line getSX], [line getSY], 0.0);
-    glVertex3f([line getSX], [line getSY], height);
-    while(line != [data getTrail]) {
-      glVertex3f([line getEX], [line getEY], 0.0);
-      glVertex3f([line getEX], [line getEY], height);    
+    glVertex3f(line->sx, line->sy, 0.0);
+    glVertex3f(line->sx, line->sy, height);
+    while(line != data->trail) {
+      glVertex3f(line->ex, line->ey, 0.0);
+      glVertex3f(line->ex, line->ey, height);    
       line++;
       polycount++;
     }
-    glVertex3f([line getEX], [line getEY], 0.0);
-    glVertex3f([line getEX], [line getEY], height);
+    glVertex3f(line->ex, line->ey, 0.0);
+    glVertex3f(line->ex, line->ey, height);
     polycount += 2;
     glEnd();
 
-    if([settings getCamType] == 1) {
+    if(game->settings->camType == 1) {
       //       glLineWidth(3);
       // glBegin(GL_LINES);
       glBegin(GL_QUADS);
 #define LINE_D 0.05
-      glVertex2f(data->trail->sx - LINE_D, [[data getTrail] getSY] - LINE_D);
-      glVertex2f(data->trail->sx + LINE_D, [[data getTrail] getSY] + LINE_D);
-      glVertex2f(data->trail->ex + LINE_D, [[data getTrail] getEY] + LINE_D);
-      glVertex2f(data->trail->ex - LINE_D, [[data getTrail] getEY] - LINE_D);
+      glVertex2f(data->trail->sx - LINE_D, data->trail->sy - LINE_D);
+      glVertex2f(data->trail->sx + LINE_D, data->trail->sy + LINE_D);
+      glVertex2f(data->trail->ex + LINE_D, data->trail->ey + LINE_D);
+      glVertex2f(data->trail->ex - LINE_D, data->trail->ey - LINE_D);
 
       glEnd();
       // glLineWidth(1);
@@ -120,15 +123,13 @@
   }
 }
 
-- (void) drawCrash: (float) radius {
+- (void) drawCrashWithRadius: (float) radius
+{
 #define CRASH_W 20
-  Game *game = [Game getGame];
-  Settings *settings = [Settings getSettings];
-
   glColor4f(1.0, 1.0, 1.0, (EXP_RADIUS_MAX - radius) / EXP_RADIUS_MAX);
   /* printf("exp_r: %.2f\n", (EXP_RADIUS_MAX - radius) / EXP_RADIUS_MAX); */
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, [[game getScreen] getTexCrash]);
+  glBindTexture(GL_TEXTURE_2D, game->screen->texCrash);
   glEnable(GL_BLEND);
   glBegin(GL_QUADS);
   glTexCoord2f(0.0, 0.0);
@@ -141,59 +142,59 @@
   glVertex3f(- CRASH_W, 0.0, CRASH_W);
   glEnd();
   glDisable(GL_TEXTURE_2D);
-  if([settings getShowAlpha] == 0) glDisable(GL_BLEND);
+  if(game->settings->show_alpha == 0) glDisable(GL_BLEND);
 }
 
-- (void) drawCycle (Player *) p {
+- (void) drawCycleWithPlayer: (Player *) p
+{
   float dirangles[] = { 180, 90, 0, 270 , 360, -90 };
   int time;
   int last_dir;
   float dirangle;
   Mesh *cycle;
-  Settings *settings = [Settings getSettings];
 
 #define turn_length 500
 
-  cycle = [[p getModel] getMesh];
+  cycle = p->model->mesh;
     
   glPushMatrix();
-  glTranslatef([[p getData] getPosX], [[p getData] getPosY], .0);
+  glTranslatef(p->data->posx, p->data->posy, .0);
 
-  if([settings getTurnCycle]) {
-    time = abs([[p getData] getTurnTime] - getElapsedTime());
+  if(game->settings->turn_cycle) {
+    time = abs(p->data->turn_time - [self getElapsedTime]);
     if(time < turn_length) {
-      last_dir = [[p getData] getLastDir];
-      if([[p getData] getDir] == 3 && last_dir == 2)
+      last_dir = p->data->last_dir;
+      if(p->data->dir == 3 && last_dir == 2)
 	last_dir = 4;
-      if([[p getData] getDir] == 2 && last_dir == 3)
+      if(p->data->dir == 2 && last_dir == 3)
 	last_dir = 5;
       dirangle = ((turn_length - time) * dirangles[last_dir] +
-		  time * dirangles[[[p getData] getDir]]) / turn_length;
+		  time * dirangles[p->data->dir]) / turn_length;
     } else
-      dirangle = dirangles[[[p getData] getDir]];
-  } else dirangle = dirangles[[[p getData] getDir]];
+      dirangle = dirangles[p->data->dir];
+  } else  dirangle = dirangles[p->data->dir];
 
   glRotatef(dirangle, 0, 0.0, 1.0);
 
-  if([settings getShowCrashTexture])
-    if([[p getData] getExpRadius] > 0 && [[p getData] getExpRadius] < EXP_RADIUS_MAX)
-      drawCrash([[p getData] getExpRadius]);
+  if(game->settings->show_crash_texture)
+    if(p->data->exp_radius > 0 && p->data->exp_radius < EXP_RADIUS_MAX)
+      [self drawCrashWithRadius: p->data->exp_radius];
 
 #define neigung 25
-  if([settings getTurnCycle]) {
+  if(game->settings->turn_cycle) {
     if(time < turn_length) {
       float axis = 1.0;
-      if([[p getData] getDir] < [[p getData] getLastDir] && [[p getData] getLastDir] != 3)
+      if(p->data->dir < p->data->last_dir && p->data->last_dir != 3)
 	axis = -1.0;
-      else if(([[p getData] getLastDir] == 3 && [[p getData] getDir] == 2) ||
-	      ([[p getData] getLastDir] == 0 && [[p getData] getDir] == 3))
+      else if((p->data->last_dir == 3 && p->data->dir == 2) ||
+	      (p->data->last_dir == 0 && p->data->dir == 3))
 	axis = -1.0;
       glRotatef(neigung * sin(M_PI * time / turn_length),
 		0.0, axis, 0.0);
     }
   }
 
-  glTranslatef(-[cycle getBBox][0] / 2, -[cycle getBBox][1] / 2, .0);
+  glTranslatef(-cycle->bbox[0] / 2, -cycle->bbox[1] / 2, .0);
   /* glTranslatef(-cycle->bbox[0] / 2, 0, .0); */
   /* glTranslatef(-cycle->bbox[0] / 2, -cycle->bbox[1], .0); */
 
@@ -201,19 +202,22 @@
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 
-  if([[p getData] getExpRadius] == 0)
-    drawModel(cycle, MODEL_USE_MATERIAL, 0);
-  else if([[p getData] getExpRadius] < EXP_RADIUS_MAX) {
+  if(p->data->exp_radius == 0)
+    [self drawModelWithMesh: cycle mode: MODEL_USE_MATERIAL flag: 0];
+  else if(p->data->exp_radius < EXP_RADIUS_MAX) {
     float alpha;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    alpha = (float) (EXP_RADIUS_MAX - [[p getData] getExpRadius]) /
+    alpha = (float) (EXP_RADIUS_MAX - p->data->exp_radius) /
       (float) EXP_RADIUS_MAX;
-    setMaterialAlphas(cycle, alpha);
-    drawExplosion(cycle, [[p getData] getExpRadius], MODEL_USE_MATERIAL, 0);
+    [self setAlphaWithMesh: cycle alpha: alpha];
+    [self drawExplosionWithMesh: cycle
+          radius: p->data->exp_radius
+          mode: MODEL_USE_MATERIAL
+          flag: 0];
   }
 
-  if([settings getShowAlpha] == 0) glDisable(GL_BLEND);
+  if(game->settings->show_alpha == 0) glDisable(GL_BLEND);
 
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
@@ -222,25 +226,29 @@
   glPopMatrix();
 }
 
-- (int) playerVisible: (Player *) eye target: (Player *) target {
+- (int) playerVisibleWithPlayer: (Player *) eye
+        player: (Player *) target
+{
   float v1[3];
   float v2[3];
   float tmp[3];
   float s;
   float d;
-  Game *game = [Game getGame];
-  Settings *settings = [Settings getSettings];
 
-  vsub([[eye getCamera] getTarget], [[eye getCamera] getCam], v1);
-  normalize(v1);
-  tmp[0] = [[target getData] getPosX];
-  tmp[1] = [[target getData] getPosY];
+  [self verticeSubWithVertice: eye->camera->target
+        vertice: eye->camera->cam
+        out: v1];
+  [self normalizeWithVertice: v1];
+  tmp[0] = target->data->posx;
+  tmp[1] = target->data->posy;
   tmp[2] = 0;
-  vsub(tmp, [[eye getCamera] getCam], v2);
-  normalize(v2);
-  s = scalarprod(v1, v2);
+  [self verticeSubWithVertice: tmp
+        vertice: eye->camera->cam
+        out: v2];
+  [self normalizeWithVertice: v2];
+  s = [self scalarProdWithVertice: v1 vertice: v2];
   /* maybe that's not exactly correct, but I didn't notice anything */
-  d = cos([settings getFOV] / 2) * 2 * M_PI / 360.0);
+  d = cos((game->settings->fov / 2) * 2 * M_PI / 360.0);
   /*
   printf("v1: %.2f %.2f %.2f\nv2: %.2f %.2f %.2f\ns: %.2f d: %.2f\n\n",
 	 v1[0], v1[1], v1[2], v2[0], v2[1], v2[2],
@@ -251,54 +259,55 @@
   else return 1;
 }
 	    
-- (void) drawPlayers: (Player *) p {
+- (void) drawPlayersWithPlayer: (Player *) p
+{
   int i;
   int dir;
   float l = 5.0;
   float height;
-  Game *game = [Game getGame];
-  Settings *settings = [Settings getSettings];
 
   glShadeModel(GL_SMOOTH);
   glEnable(GL_BLEND);
-  for(i = 0; i < [game getPlayers]; i++) {
-    height = [[[game getPlayer][i] getData] getTrailHeight];
+  for(i = 0; i < game->players; i++) {
+    height = game->player[i].data->trail_height;
     if(height > 0) {
       glPushMatrix();
-      glTranslatef([[[game getPlayer][i] getData] getPosX],
-		   [[[game getPlayer][i] getData] getPosY],
+      glTranslatef(game->player[i].data->posx,
+		   game->player[i].data->posy,
 		   0);
       /* draw Quad */
-      dir = [[[game getPlayer][i] getData] getDir];
-      glColor3fv([[[game getPlayer][i] getModel] getColorModel]);
+      dir = game->player[i].data->dir;
+      glColor3fv(game->player[i].model->color_model);
       glBegin(GL_QUADS);
       glVertex3f(0, 0, 0);
       glColor4f(0, 0, 0, 0);
-      glVertex3f(-dirsX[dir] * l, -dirsY[dir] * l, 0);
-      glVertex3f(-dirsX[dir] * l, -dirsY[dir] * l, height);
-      glColor3fv([[[game getPlayer][i] getModel] getColorModel]);
+      glVertex3f(-dirsX[ dir ] * l, -dirsY[ dir ] * l, 0);
+      glVertex3f(-dirsX[ dir ] * l, -dirsY[ dir ] * l, height);
+      glColor3fv(game->player[i].model->color_model);
       glVertex3f(0, 0, height);
       glEnd();
       polycount++;
       glPopMatrix();
     }
-    if(playerVisible(p, &([game getPlayer][i]))) {
-      if([settings getShowModel])
-	drawCycle(&([game getPlayer][i]));
+    if([self playerVisibleWithPlayer: p
+             player: &(game->player[i])]) {
+      if(game->settings->show_model)
+	[self drawCycleWithPlayer: &(game->player[i])];
     }
   }
-  if([settings getShowAlpha] != 1) glDisable(GL_BLEND);
+  if(game->settings->show_alpha != 1) glDisable(GL_BLEND);
   glShadeModel(GL_FLAT);
 }
 
-- (void) drawGlow: (Player *) p display: (GDisplay *) d dimension: (float) dim {
+- (void) drawGlowWithPlayer: (Player *) p
+         display: (gDisplay *) d
+         dimension: (float) dim
+{
   float mat[4*4];
-  Game *game = [Game getGame];
-  Settings *settings = [Settings getSettings];
   
   glPushMatrix();
-  glTranslatef([[p getData] getPosX],
-               [[p getData] getPosY],
+  glTranslatef(p->data->posx,
+               p->data->posy,
                0);
   /* draw Model */
 
@@ -312,7 +321,7 @@
   mat[8] = mat[9] = 0.0;
   glLoadMatrixf(mat);
   glBegin(GL_TRIANGLE_FAN);
-  glColor3fv([[p getModel] getColorModel]);
+  glColor3fv(p->model->color_model);
 
   glVertex3f(0,TRAIL_HEIGHT/2, 0);
   glColor4f(0,0,0,0.0);
@@ -333,14 +342,14 @@
 
 
   glBegin(GL_TRIANGLES);
-  glColor3fv([[p getModel] getColorModel]);
+  glColor3fv(p->model->color_model);
   glVertex3f(0,TRAIL_HEIGHT/2, 0);
   glColor4f(0,0,0,0.0);
   glVertex3f(0,-TRAIL_HEIGHT/4,0);
   glVertex3f(dim*cos(-0.2*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(-0.2*3.1415/5.0), 0);
 
-  glColor3fv([[p getModel] getColorModel]);
+  glColor3fv(p->model->color_model);
   glVertex3f(0,TRAIL_HEIGHT/2, 0);
   glColor4f(0,0,0,0.0);
   glVertex3f(dim*cos(5.2*3.1415/5.0),
@@ -351,12 +360,13 @@
 
 
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if([settings getShowAlpha] != 1) glDisable(GL_BLEND);
+  if(game->settings->show_alpha != 1) glDisable(GL_BLEND);
   glShadeModel(GL_FLAT);
   glPopMatrix();  
 }
 
-- (void) drawWalls (GDisplay *) d {
+- (void) drawWallsWithDisplay: (gDisplay *) d
+{
   float t = 4;
   glColor4f(1.0, 1.0, 1.0, 1.0);
 
@@ -367,7 +377,7 @@
   glEnable(GL_CULL_FACE);
 
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, [[game getScreen] getTexWall]);
+  glBindTexture(GL_TEXTURE_2D, game->screen->texWall);
   glBegin(GL_QUADS);
   glTexCoord2f(t, 0.0); glVertex3f(0.0, 0.0, 0.0);
   glTexCoord2f(t, 1.0); glVertex3f(0.0, 0.0, WALL_H);
@@ -399,7 +409,7 @@
 }
 
 /*
-void drawHelp(GDisplay *d) {
+void drawHelp(gDisplay *d) {
   rasonly(d);
   glColor4f(0.2, 0.2, 0.2, 0.8);
   glEnable(GL_BLEND);
@@ -416,39 +426,44 @@ void drawHelp(GDisplay *d) {
 }
 */
 
-- (void) drawCam: (Player *) p display: (GDisplay *) d {
+- (void) drawCameraWithPlayer: (Player *) p
+         display: (gDisplay *) d
+{
   int i;
-  Settings *settings = [Settings getSettings];
 
-  if ([d getFog] == 1) glEnable(GL_FOG);
+  if (d->fog == 1) glEnable(GL_FOG);
 
   glColor3f(0.0, 1.0, 0.0);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective([settings getFOV], [d getVPW] / [d getVPH], 3.0, GSIZE);
+  gluPerspective(game->settings->fov, d->vp_w / d->vp_h, 3.0, GSIZE);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glLightfv(GL_LIGHT0, GL_POSITION, [[p getCamera] getCam]);
+  glLightfv(GL_LIGHT0, GL_POSITION, p->camera->cam);
 
-  gluLookAt([[p getCamera] getCam][0], [[p getCamera] getCam][1], [[p getCamera] getCam][2],
-	    [[p getCamera] getTarget][0], [[p getCamera] getTarget][1], [[p getCamera] getTarget][2],
+  gluLookAt(p->camera->cam[0], p->camera->cam[1], p->camera->cam[2],
+	    p->camera->target[0], p->camera->target[1], p->camera->target[2],
 	    0, 0, 1);
 
-  drawFloor(d);
-  if([settings getShowWall] == 1)
-    drawWalls(d);
+  [self drawFloorWithDisplay: d];
+  if(game->settings->show_wall == 1)
+    [self drawWallsWithDisplay: d];
 
-  for(i = 0; i < [game getPlayers]; i++)
-    drawTraces(&([game getPlayer][i]), d, i);
+  for(i = 0; i < game->players; i++)
+    [self drawTracesWithPlayer: &(game->player[i])
+          display: d
+          instance: i];
 
-  drawPlayers(p);
+  [self drawPlayersWithPlayer: p];
 
   /* draw the glow around the other players: */
-  if([settings getShowGlow] == 1)
-    for(i = 0; i < [game getPlayers]; i++)
-      if ((p != &([game getPlayer][i])) && ([[[game getPlayer][i] getData] getSpeed] > 0))
-	drawGlow(&([game getPlayer][i]), d, TRAIL_HEIGHT * 4);
+  if(game->settings->show_glow == 1)
+    for(i = 0; i < game->players; i++)
+      if ((p != &(game->player[i])) && (game->player[i].data->speed > 0))
+	[self drawGlowWithPlayer: &(game->player[i])
+              display: d
+              dimension: TRAIL_HEIGHT * 4];
 
 
   /* highLight crashed player */
@@ -469,16 +484,21 @@ void drawHelp(GDisplay *d) {
   glDisable(GL_FOG);
 }
 
-- (void) drawAI: (GDisplay *) d {
+- (void) drawAIWithDisplay: (gDisplay *) d
+{
   char ai[] = "computer player";
 
-  rasonly(d);
+  [self rasterizerOnlyWithDisplay: d];
   glColor3f(1.0, 1.0, 1.0);
-  drawText(d->vp_w / 4, 10, d->vp_w / (2 * strlen(ai)), ai);
+  [self drawTextWithX: d->vp_w / 4
+        y: 10
+        size: d->vp_w / (2 * strlen(ai))
+        text: ai];
   /* glRasterPos2i(100, 0); */
 }
 
-- (void) drawPause: (GDisplay *) display {
+- (void) drawPauseWithDisplay: (gDisplay *) display
+{
   char pause[] = "Game is paused";
   char winner[] = "Player %d wins";
   char buf[100];
@@ -487,9 +507,8 @@ void drawHelp(GDisplay *d) {
   static float lt = 0;
   float delta;
   long now;
-  Game *game = [Game getGame];
 
-  now = getElapsedTime();
+  now = [self getElapsedTime];
   delta = now - lt;
   lt = now;
   delta /= 500.0;
@@ -500,17 +519,19 @@ void drawHelp(GDisplay *d) {
     d -= 2 * M_PI;
   }
 
-  if([game getPauseFlag] & PAUSE_GAME_FINISHED &&
-     [game getWinner] != -1) {
+  if(game->pauseflag & PAUSE_GAME_FINISHED &&
+     game->winner != -1) {
     message = buf;
-    sprintf(message, winner, [game getWinner] + 1);
+    sprintf(message, winner, game->winner + 1);
   } else {
     message = pause;
   }
 
-  rasonly([game getScreen]);
+  [self rasterizerOnlyWithDisplay: game->screen];
   glColor3f(1.0, (sin(d) + 1) / 2, (sin(d) + 1) / 2);
-  drawText([display getVPW] / 6, 20, 
-	   [display getVPW] / (6.0 / 4.0 * strlen(message)), message);
+  [self drawTextWithX: display->vp_w / 6
+        y: 20
+        size: display->vp_w / (6.0 / 4.0 * strlen(message))
+        text: message];
 }
 @end

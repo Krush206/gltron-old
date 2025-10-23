@@ -1,10 +1,12 @@
 /* use libmikmod to play a soundsample */
 
-#import <mikmod.h>
-#import "gltron.h"
+#include <mikmod.h>
+#include "gltron.h"
 
-@implementation Sound
-- (int) initSound: (int) soundDriver
+MODULE* sound_module;
+
+@implementation GLtron (Sound)
+- (void) initSound
 {
   md_mode |= DMODE_SOFT_MUSIC;
   md_mixfreq = 44100;
@@ -15,7 +17,7 @@
   MikMod_RegisterAllDrivers();
 #endif
   printf("%s\n", MikMod_InfoDriver());
-  md_device = soundDriver;
+  md_device = game->settings->sound_driver;
 
   MikMod_RegisterAllLoaders();
 
@@ -27,7 +29,7 @@
   return 0;
 }
 
-- (int) loadSound: (char *name)
+- (int) loadSound: (char *) name
 {
   sound_module = Player_Load(name, 64, 0);
   if(!sound_module) {

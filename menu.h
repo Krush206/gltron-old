@@ -1,25 +1,15 @@
 #ifndef MENUS
 #define MENUS
 
-@interface MDisplay: NSObject
-{
+typedef struct {
   /* fonttex *font; */
   float fgColor[4]; /* entries */
   float hlColor[4]; /* the highlighted one */
 
   char szCaption[32];
-}
+} mDisplay;
 
-- (void) setFGColor: (float *) o;
-- (void) setHLColor: (float *) o;
-- (void) setSZCaption: (char *) o;
-- (float *) getFGColor;
-- (float *) getHLColor;
-- (char *) getSZCaption;
-@end
-
-@interface Menu: NSObject
-{
+typedef struct Menu {
   int nEntries;
   int iHighlight;
   mDisplay display;
@@ -28,36 +18,16 @@
   struct Menu** pEntries;
   struct Menu* parent;
   void* param; /* reserved to bind parameters at runtime */
-}
+} Menu;
 
-- (void) setNEntries: (int) o;
-- (void) setIHighlight: (int) o;
-- (void) setMDisplay: (MDisplay *) o;
-- (void) setSZName: (char *) o;
-- (void) setSZCapFormat: (char *) o;
-- (void) setPEntries: (NSArray *) o;
-- (void) setParent: (Menu *) o;
-- (void) setParam: (void *) o;
-- (int) getNEntries;
-- (int) getIHighlight;
-- (MDisplay *) getMDisplay;
-- (char *) getSZName;
-- (char *) getSZCapFormat;
-- (NSArray *) getPEntries;
-- (Menu *) getParent;
-- (void *) getParam;
-@end
-
-@interface Node: NSObject
-{
+typedef struct {
   void* data;
   void* next;
-}
-
-- (void) setData: (void *) o;
-- (void) setNext: (void *) o;
-- (void *) getData;
-- (void *) getNext;
-@end
+} node;
 
 #endif
+
+
+
+
+

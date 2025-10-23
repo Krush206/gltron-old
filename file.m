@@ -1,13 +1,14 @@
 #include "gltron.h"
 
-@implementation File
-- (NSString *) getFullPath: (NSString *) filename
+@implementation GLtron (File)
+- (char *) fullPathWithFile: (char *) filename
 {
-  NSString *base, *path;
-  NSFileHandle *fp;
+  char *path;
+  FILE *fp = NULL;
+  char *base;
 
-  NSString *share1 = [[NSString alloc] initWithString: @"/usr/share/games/gltron"];
-  NSString *share2 = [[NSString alloc] initWithString: @"/usr/local/share/games/gltron"];
+  char *share1 = "/usr/share/games/gltron";
+  char *share2 = "/usr/local/share/games/gltron";
 
   /* check a few directories for the files and */
   /* return the full path. */
@@ -15,49 +16,61 @@
   /* check: current directory, GLTRON_HOME, and, for UNIX only: */
   /* /usr/share/games/gltron and /usr/local/share/games/gltron */
 
-  path = [[NSString alloc] initWithString: filename];
+  path = malloc(strlen(filename) + 1);
+  sprintf(path, "%s", filename);
 
-  printf("checking '%s'...", [path UTF8String]);
-  fp = [NSFileHandle fileForReadingAtPath: path];
-  if(fp != nil) {
-    printf("ok\n");
+  printf("checking '%s'...", path);
+  fp = fopen(path, "r");
+  if(fp != 0) {
+    fclose(fp);
+	printf("ok\n");
     return path;
   }
+  free(path);
   printf("unsuccessful\n");
 
-  base = [[NSString alloc] initWithUTF8String: getenv("GLTRON_HOME")];
-  if(base != nil) {
-    path = [[NSString alloc] initWithFormat: @"%@%c%@", base, SEPERATOR, filename];
+  base = getenv("GLTRON_HOME");
+  if(base != 0) {
+    path = malloc(strlen(base) + 1 + strlen(filename) + 1);
+    sprintf(path, "%s%c%s", base, SEPERATOR, filename);
 
-    printf("checking '%s'...", [path UTF8String]);
-    fp = [NSFileHandle fileForReadingAtPath: path];
-    if(fp != nil) {
-      printf("ok\n");
+    printf("checking '%s'...", path);
+    fp = fopen(path, "r");
+    if(fp != 0) {
+      fclose(fp);
+	  printf("ok\n");
       return path;
     }
+    free(path);
     printf("unsuccessful\n");
   }
 
-  path = [[NSString alloc] initWithFormat: @"%@%c%@", share1, SEPERATOR, filename];
+  path = malloc(strlen(share1) + 1 + strlen(filename) + 1);
+  sprintf(path, "%s%c%s", share1, SEPERATOR, filename);
 
-  printf("checking '%s'", [path UTF8String]);
-  fp = [NSFileHandle fileForReadingAtPath: path];
-  if(fp != nil) {
-    printf("ok\n");
+  printf("checking '%s'", path);
+  fp = fopen(path, "r");
+  if(fp != 0) {
+	printf("ok\n");
+    fclose(fp);
     return path;
   }
+  free(path);
   printf("unsuccessful\n");
 
-  path = [[NSString alloc] initWithFormat: @"%@%c%@", share2, SEPERATOR, filename];
+  path = malloc(strlen(share2) + 1 + strlen(filename) + 1);
+  sprintf(path, "%s%c%s", share2, SEPERATOR, filename);
   
-  printf("checking '%s'", [path UTF8String]);
-  fp = [NSFileHandle fileForReadingAtPath: path];
-  if(fp != nil) {
-    printf("ok\n");
+  printf("checking '%s'", path);
+  fp = fopen(path, "r");
+  if(fp != 0) {
+    fclose(fp);
+	printf("ok\n");
     return path;
   }  
+  free(path);
   printf("unsuccessful\n");
 
-  return nil;
+  return 0;
 }
 @end
