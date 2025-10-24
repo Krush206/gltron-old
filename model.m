@@ -304,7 +304,7 @@
 
   /* rescale */
 
-  [self rescaleVertices: nVertices
+  [self rescaleVertices: vert
         size: size
         count: nVertices
         box: mesh->bbox];
