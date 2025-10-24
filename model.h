@@ -29,4 +29,15 @@ typedef struct {
   float bbox[3];
 } Mesh;
 
+extern char* getFullPath(char* filename);
+extern int loadMaterials(char* filename, Material **materials);
+extern Mesh* loadModel(const char *filename, float size, int flags);
+extern void unloadModel(Mesh *mesh);
+extern void drawModel(Mesh *mesh, int mode, int flag);
+extern void drawExplosion(Mesh *mesh, float radius, int mode, int flag);
+extern void setMaterialAlphas(Mesh *mesh, float alpha);
+extern void setMaterialAmbient(Mesh *mesh, int material, float* color);
+extern void setMaterialDiffuse(Mesh *mesh, int material, float* color);
+extern void setMaterialSpecular(Mesh *mesh, int material, float* color);
+
 #endif
