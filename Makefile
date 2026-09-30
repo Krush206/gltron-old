@@ -4,9 +4,13 @@ PROG := gltron
 CC := gcc
 OPT := -O2
 
-CFLAGS := -c -Wall -I/usr/GNUstep/Local/Library/Headers
+CFLAGS := -Wall \
+	  -I/usr/local/GNUstep/Local/Library/Headers \
+	  -I/usr/local/include
+LDFLAGS := -L/usr/local/GNUstep/Local/Library/Libraries \
+	   -L/usr/local/lib
 
-LIBS := -l:libobjc.a -lGL -lGLU -lglut -lm
+LIBS := -lobjc -lGL -lGLU -lglut -lm
 
 SRC := sgi_texture.m \
        switchCallbacks.m \
@@ -31,11 +35,11 @@ SRC := sgi_texture.m \
 OBJ := $(SRC:.m=.o)
 
 all: $(OBJ)
-	$(CC) -o ./$(PROG) $(OBJ) $(LIBS)
+	$(CC) -o ./$(PROG) $(LDFLAGS) $(OBJ) $(LIBS)
 	strip ./$(PROG)
 
 %.o: %.m
-	$(CC) $(OPT) $(CFLAGS) $<
+	$(CC) -c $(OPT) $(CFLAGS) $<
 
 clean: 
 	rm -f ./*.o ./$(PROG)
